@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitácora de turno</title>
+<style>
+  :root {
+    --bg: #F2F2F7;
+    --card: #FFFFFF;
+    --ink: #1C1C1E;
+    --ink-sec: #8E8E93;
+    --ink-tert: #C7C7CC;
+    --line: #E5E5EA;
+    --blue: #007AFF;
+    --blue-bg: #E8F1FF;
+    --green: #34C759;
+    --green-bg: #E4F8E9;
+    --orange: #FF9500;
+    --orange-bg: #FFF2E0;
+    --red: #FF3B30;
+    --red-bg: #FFE9E8;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 9px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+    min-height: 100vh;
+    padding: 20px 14px 60px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  h1.page-title {
+    font-size: 28px; font-weight: 700; letter-spacing: -0.4px;
+    margin: 4px 4px 16px; color: var(--ink);
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 16px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03);
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600; color: var(--ink-sec);
+    text-transform: uppercase; letter-spacing: 0.4px;
+    margin: 0 4px 10px;
+  }
+
+  .field-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .field-row:last-child { margin-bottom: 0; }
+  .field-label { font-size: 12px; color: var(--ink-sec); font-weight: 500; margin-left: 4px; }
+  input[type="text"], input[type="url"], input[type="number"], input[type="date"], input[type="time"], textarea {
+    width: 100%;
+    background: var(--bg);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 11px 12px;
+    font-size: 15px;
+    color: var(--ink);
+    font-family: inherit;
+    outline: none;
+  }
+  input::placeholder, textarea::placeholder { color: var(--ink-tert); }
+  input:focus, textarea:focus { box-shadow: 0 0 0 2px var(--blue); }
+  textarea { resize: vertical; min-height: 70px; line-height: 1.4; }
+
+  .name-row { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--blue-bg); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 15px; flex-shrink: 0;
+  }
+  .name-row input { flex: 1; }
+
+  .seg {
+    display: flex; background: var(--bg); border-radius: var(--radius-sm);
+    padding: 2px; gap: 2px;
+  }
+  .seg button {
+    flex: 1; border: none; background: transparent; padding: 8px 6px;
+    font-size: 13px; font-weight: 500; color: var(--ink-sec);
+    border-radius: 7px; cursor: pointer; font-family: inherit;
+  }
+  .seg button.active { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.12); font-weight: 600; }
+
+  .toprow { display: flex; gap: 12px; flex-wrap: wrap; }
+  .toprow > div { flex: 1; min-width: 140px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+  .add-btn {
+    width: 100%; background: var(--blue); color: #fff; border: none;
+    border-radius: var(--radius-sm); padding: 11px; font-size: 15px; font-weight: 600;
+    cursor: pointer; font-family: inherit; margin-top: 10px;
+  }
+  .add-btn:active { opacity: 0.8; }
+  .add-btn.secondary { background: var(--bg); color: var(--blue); }
+  .add-btn.small { width: auto; padding: 8px 14px; font-size: 13px; margin-top: 0; }
+
+  .count-pill {
+    font-size: 12px; font-weight: 600; color: var(--ink-sec);
+    background: var(--bg); padding: 4px 10px; border-radius: 999px;
+  }
+  .row-between { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 10px; }
+  .row-between .card-title { margin: 0; }
+
+  .ring-wrap { position: relative; width: 46px; height: 46px; flex-shrink: 0; }
+  .ring-wrap svg { width: 46px; height: 46px; transform: rotate(-90deg); }
+  .ring-wrap circle { fill: none; stroke-width: 4; }
+  .ring-bg { stroke: var(--bg); }
+  .ring-fg { stroke: var(--green); stroke-linecap: round; transition: stroke-dashoffset 0.35s ease; }
+  .ring-label {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--ink);
+  }
+
+  .task-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-check, .btn-x {
+    width: 27px; height: 27px; border-radius: 50%; border: 1.5px solid var(--ink-tert);
+    background: transparent; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink-tert); padding: 0;
+  }
+  @media (max-width: 500px) {
+    .btn-check, .btn-x, .btn-edit, .task-item .del { width: 34px; height: 34px; font-size: 15px; }
+  }
+  .btn-check.active { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn-x.active { background: var(--red); border-color: var(--red); color: #fff; }
+  .task-item.status-done .txt { text-decoration: line-through; color: var(--ink-sec); }
+  .task-item.status-notdone .txt { color: var(--red); }
+  .task-item.status-done, .task-item.status-notdone { opacity: 0.85; }
+
+  .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .empty { padding: 24px 10px; text-align: center; color: var(--ink-tert); font-size: 14px; }
+
+  .task-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--bg); border-radius: var(--radius-md); padding: 12px;
+  }
+  .task-item.done { opacity: 0.5; }
+  .chk {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--ink-tert); flex-shrink: 0; margin-top: 1px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    background: transparent; font-size: 12px; font-weight: 700; color: #fff;
+  }
+  .task-item.done .chk { background: var(--green); border-color: var(--green); }
+  .task-item .body { flex: 1; min-width: 0; }
+  .task-item .txt { font-size: 15px; line-height: 1.35; word-break: break-word; }
+  .task-item .txt.editable { cursor: text; }
+  .edit-input {
+    width: 100%; background: var(--card); border: 1.5px solid var(--blue);
+    border-radius: 8px; padding: 7px 9px; font-size: 15px; font-family: inherit;
+    color: var(--ink); outline: none;
+  }
+  .btn-edit {
+    width: 27px; height: 27px; border-radius: 50%; border: none; background: transparent;
+    color: var(--ink-tert); cursor: pointer; font-size: 15px; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0; padding: 0;
+  }
+  .btn-edit:active { color: var(--blue); }
+  .task-item.done .txt { text-decoration: line-through; color: var(--ink-sec); }
+  .by-tag { font-size: 11px; color: var(--ink-sec); margin-top: 2px; }
+  .del { background: none; border: none; color: var(--ink-tert); cursor: pointer; font-size: 20px; line-height: 1; padding: 0 2px; flex-shrink: 0; }
+  .del:active { color: var(--red); }
+
+  .activity-item { background: var(--bg); border-radius: var(--radius-md); padding: 12px; }
+  .activity-item .meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .time-badge { font-size: 12px; font-weight: 600; color: var(--ink-sec); display: flex; align-items: center; gap: 6px; }
+  .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 2px 7px; border-radius: 999px; }
+  .tag.importante { background: var(--red-bg); color: var(--red); }
+  .tag.evento { background: var(--orange-bg); color: var(--orange); }
+  .activity-item .txt { font-size: 15px; line-height: 1.35; word-break: break-word; }
+  .event-meta { font-size: 12px; color: var(--ink-sec); margin-top: 5px; }
+  .event-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .event-actions a {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 600; padding: 6px 11px; border-radius: 999px;
+    text-decoration: none; background: var(--card); color: var(--ink-sec); border: 1px solid var(--line);
+  }
+  .event-actions a.gcal { background: var(--orange-bg); color: var(--orange); border: none; }
+
+  .inv-add { display: flex; flex-direction: column; gap: 8px; }
+  .inv-fields { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; }
+  @media (max-width: 500px) { .inv-fields { grid-template-columns: 1fr; } }
+  .inv-table { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+  .inv-row {
+    display: grid; grid-template-columns: 90px 1fr 70px 60px 24px; align-items: center; gap: 8px;
+    background: var(--bg); border-radius: var(--radius-md); padding: 10px 12px;
+  }
+  @media (max-width: 560px) { .inv-row { grid-template-columns: 1fr; gap: 2px; } .inv-row .del { justify-self: end; } }
+  .inv-date { font-size: 11px; color: var(--ink-sec); text-align: right; }
+  .inv-sku { font-size: 12px; font-weight: 700; color: var(--blue); font-family: ui-monospace, 'SF Mono', monospace; }
+  .inv-desc { font-size: 14px; color: var(--ink); word-break: break-word; }
+  .inv-qty { font-size: 14px; font-weight: 700; text-align: right; }
+  .inv-qty.neg { color: var(--red); }
+  .inv-qty.pos { color: var(--green); }
+  .inv-row.solicitud { grid-template-columns: 1fr 60px 24px; }
+  .inv-solicitud-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; color: var(--ink);
+  }
+  .inv-solicitud-badge .tag-erp {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+    padding: 2px 7px; border-radius: 999px; background: var(--blue-bg); color: var(--blue);
+  }
+  .paste-toggle { font-size: 13px; color: var(--blue); font-weight: 600; background: none; border: none; cursor: pointer; padding: 6px 4px; text-align: left; font-family: inherit; }
+  .paste-box { display: none; flex-direction: column; gap: 8px; }
+  .paste-box.open { display: flex; }
+  .hint { font-size: 11px; color: var(--ink-sec); margin: -2px 4px 0; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: rgba(28,28,30,0.92); color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+    z-index: 50;
+  }
+  .toast.show { opacity: 1; }
+
+  .status-bar { text-align: center; font-size: 12px; color: var(--ink-tert); margin: 4px 0 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1 class="page-title" id="localTitle">Mi local</h1>
+  <div class="status-bar" id="statusBar">Sincronizado</div>
+
+  <div class="card">
+    <div class="field-row">
+      <span class="field-label">Nombre del local</span>
+      <input type="text" id="localName" value="Mi local" maxlength="40" />
+    </div>
+    <div class="toprow">
+      <div class="field-row">
+        <span class="field-label">Fecha</span>
+        <input type="date" id="datePicker" />
+      </div>
+      <div class="field-row">
+        <span class="field-label">Turno</span>
+        <div class="seg" id="turnoSeg">
+          <button data-v="Mañana" class="active">Mañana</button>
+          <button data-v="Tarde">Tarde</button>
+        </div>
+      </div>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Encargado de turno</span>
+      <div class="name-row">
+        <div class="avatar" id="avatarInitial">?</div>
+        <input type="text" id="personaInput" placeholder="Tu nombre" maxlength="40" />
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="row-between">
+        <div class="card-title">Tareas del día</div>
+        <div class="ring-wrap">
+          <svg viewBox="0 0 40 40">
+            <circle class="ring-bg" cx="20" cy="20" r="16"></circle>
+            <circle class="ring-fg" id="ringFg" cx="20" cy="20" r="16"></circle>
+          </svg>
+          <div class="ring-label" id="ringLabel">0/0</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <input type="text" id="taskInput" placeholder="Agregar tarea adicional" maxlength="140" />
+      </div>
+      <button class="add-btn" id="taskAddBtn">Agregar tarea</button>
+      <ul class="list" id="taskList" style="margin-top:12px;"></ul>
+    </div>
+
+    <div class="card">
+      <div class="row-between">
+        <div class="card-title">Actividades del turno</div>
+        <span class="count-pill" id="actCount">0</span>
+      </div>
+      <div class="field-row">
+        <input type="text" id="actInput" placeholder="Ej: Llegó pedido de proveedor" maxlength="200" />
+      </div>
+      <div class="toprow">
+        <div class="field-row">
+          <span class="field-label">Hora del registro</span>
+          <input type="time" id="actTime" />
+        </div>
+        <div class="field-row">
+          <span class="field-label">Tipo</span>
+          <div class="seg" id="tipoSeg">
+            <button data-v="normal" class="active">Normal</button>
+            <button data-v="importante">Importante</button>
+            <button data-v="evento">Evento</button>
+          </div>
+        </div>
+      </div>
+      <div id="eventFields" style="display:none;">
+        <div class="toprow">
+          <div class="field-row">
+            <span class="field-label">Fecha del evento</span>
+            <input type="date" id="eventDate" />
+          </div>
+          <div class="field-row">
+            <span class="field-label">Hora del evento</span>
+            <input type="time" id="eventTime" />
+          </div>
+        </div>
+        <div class="field-row">
+          <span class="field-label">Enlace (opcional)</span>
+          <input type="url" id="eventLink" placeholder="https://..." />
+        </div>
+      </div>
+      <button class="add-btn" id="actAddBtn">Registrar actividad</button>
+      <ul class="list" id="actList" style="margin-top:12px;"></ul>
+    </div>
+
+  </div>
+
+  <div class="card">
+    <div class="row-between">
+      <div class="card-title">Ajuste de inventario</div>
+      <span class="count-pill" id="invCount">0</span>
+    </div>
+
+    <div class="inv-add">
+      <div class="inv-fields">
+        <input type="text" id="invSku" placeholder="SKU" maxlength="40" />
+        <input type="text" id="invDesc" placeholder="Descripción del producto" maxlength="120" />
+        <input type="number" id="invQty" placeholder="Cant. +/-" />
+      </div>
+      <button class="add-btn" id="invAddBtn">Agregar ajuste</button>
+    </div>
+
+    <button class="paste-toggle" id="pasteToggle">Pegar varias filas desde Excel ▾</button>
+    <div class="paste-box" id="pasteBox">
+      <div class="hint">Pegá filas copiadas de una planilla: SKU, descripción y cantidad separadas por tabulación o coma, una fila por línea.</div>
+      <textarea id="pasteArea" placeholder="SKU-001	Yerba mate 1kg	-3
+SKU-002	Aceite girasol 900ml	5"></textarea>
+      <div class="btn-row">
+        <button class="add-btn small" id="pasteImportBtn">Importar filas</button>
+      </div>
+    </div>
+
+    <button class="paste-toggle" id="solicitudToggle">Ingresar número de solicitud ▾</button>
+    <div class="paste-box" id="solicitudBox">
+      <div class="hint">Si no vas a detallar el listado completo, registrá solo el número de solicitud que generó el ERP.</div>
+      <div class="toprow">
+        <div class="field-row" style="margin-bottom:0;">
+          <input type="text" id="invSolicitud" placeholder="N° de solicitud" maxlength="40" />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="add-btn small" id="solicitudAddBtn">Registrar solicitud</button>
+      </div>
+    </div>
+
+    <div class="inv-table" id="invTable"></div>
+
+    <div class="btn-row" style="margin-top:12px;" id="invActions"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <footer style="margin-top:18px; padding:14px 16px; text-align:center;">
+    <p style="font-size:11px; line-height:1.6; color:var(--ink-tert); margin:0;">
+      Las actividades y tareas indicadas son propias de la operación de este local.
+      Esta herramienta fue desarrollada con IA (Claude, de Anthropic) y su contenido tiene fines de apoyo operacional interno.
+      En ningún momento se incentiva compartir información confidencial con terceros externos a la empresa.
+    </p>
+  </footer>
+</div>
+
+<script>
+(function() {
+  const DEFAULT_TASKS = [
+    'Recepción de mercadería (PDA)',
+    'Auditoria de medicamentos refrigerados',
+    'Auditoria de medicamentos controlados',
+    'Reporte por temperatura (Alerta)',
+    'Monitoreo de recepción ciega (ERP)',
+    'Consulta estado de diferencia de despacho (ERP)',
+    'Revisar canjes (F11 + !=0 + Ctrl F11)',
+    'Revisar tránsito (F11 + !=0 + Ctrl F11)',
+    'Revisar disponible (F11 + <0 + Ctrl F11)',
+    'Revisar vitrina (F11 + !=0 + Ctrl F11)',
+    'Revisar diferencias (F11 + !=0 + Ctrl F11)',
+    'Realizar códigos de autorización',
+    'Toma de temperatura (a.m.) — Oficina (1)',
+    'Toma de temperatura (a.m.) — Sala (2)',
+    'Toma de temperatura (a.m.) — Refrigeradores (3)',
+    'Toma de temperatura (a.m.) — Visicooler (1)',
+    'Takary guía de controlados',
+    'Realizar "Teamcore" (a partir de las 12:00 p.m)',
+    'Realizar arqueo de valores (Comunidad SB)',
+    'Ingresar GD de medicamentos controlados (Excel)',
+    'Ingresar GD de medicamentos controlados (Libro)',
+    'Prosegur (Jueves)',
+    'Pagar sencillo',
+    'Pedir sencillo',
+    'Inventario CTRL-SELECTIVO',
+    'Inventario CTRL-BRECHA',
+    'Realizar Takary Brecha',
+    'Revisar y publicar NPS',
+    'Revisar y publicar concursos',
+    'Entregar recetario magistral',
+    'Recepción de GD recetario magistral (ERP)',
+    'Realizar GD de bandejas vacías',
+    'Realizar GD de cooler',
+    'Realizar GD de data logger',
+    'Realizar GD de memos',
+    'Realizar GD de documentos que se envían por valija',
+    'Confirmar GD pendientes',
+    'Ingresar recetas de bzd (Libro)',
+    'Ingresar recetas de psicotrópicos (Libro)',
+    'Ingresar recetas de estupefacientes (Libro)',
+    'Ingresar recetas cheques (Excel)',
+    'Ingresar recetas retenidas sin control de stock',
+    'Ingresar recetas recetario magistral (Libro)',
+    'Toma de temperatura (p.m.) — Oficina (1)',
+    'Toma de temperatura (p.m.) — Sala (2)',
+    'Toma de temperatura (p.m.) — Refrigeradores (3)',
+    'Toma de temperatura (p.m.) — Visicooler (1)',
+    'Archivar documentos pendientes',
+    'Revisar e implementar exhibiciones'
+  ];
+
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVYVpaN7JpgQUI7URYDjp_8qisLoUMg5wkf7drsse-CEBDqCkjfx7j_hACxGZMUVfmdQ/exec';
+
+  const $ = (id) => document.getElementById(id);
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); };
+  const nowHM = () => { const d = new Date(); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); };
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  const esc = (s) => String(s == null ? '' : s);
+
+  const datePicker = $('datePicker');
+  const localName = $('localName');
+  const localTitle = $('localTitle');
+  const statusBar = $('statusBar');
+  const personaInput = $('personaInput');
+  const avatarInitial = $('avatarInitial');
+  const toast = $('toast');
+
+  const turnoSeg = $('turnoSeg');
+  const tipoSeg = $('tipoSeg');
+  const eventFields = $('eventFields');
+  const actTime = $('actTime');
+  const eventDate = $('eventDate');
+  const eventTime = $('eventTime');
+  const eventLink = $('eventLink');
+
+  let turno = 'Mañana';
+  let tipoActividad = 'normal';
+
+  datePicker.value = todayStr();
+  actTime.value = nowHM();
+
+  let state = { tasks: [], activities: [], inventory: [] };
+  let saveTimer = null;
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+
+  function setStatus(text) { statusBar.textContent = text; }
+
+  function currentPersona() { return personaInput.value.trim(); }
+
+  function requirePersona() {
+    if (!currentPersona()) {
+      showToast('Ingresá el nombre de quien está de turno');
+      personaInput.focus();
+      return false;
+    }
+    return true;
+  }
+
+  function updateAvatar() {
+    const v = currentPersona();
+    avatarInitial.textContent = v ? v.trim()[0].toUpperCase() : '?';
+  }
+
+  function defaultTaskState() {
+    return DEFAULT_TASKS.map(text => ({ id: uid(), text, status: null, by: null }));
+  }
+
+  async function loadDay() {
+    setStatus('Cargando...');
+    try {
+      const url = APPS_SCRIPT_URL + '?action=getDay&fecha=' + encodeURIComponent(datePicker.value);
+      const res = await fetch(url);
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      if (json.found) {
+        state = { tasks: json.tasks || [], activities: json.activities || [], inventory: json.inventory || [] };
+        if (json.turno) setTurno(json.turno);
+        if (json.localName) { localName.value = json.localName; localTitle.textContent = json.localName; }
+      } else {
+        state = { tasks: defaultTaskState(), activities: [], inventory: [] };
+        scheduleSave();
+      }
+      setStatus('Sincronizado con Sheets');
+    } catch (e) {
+      state = { tasks: defaultTaskState(), activities: [], inventory: [] };
+      setStatus('Sin conexión con Sheets — verificá tu internet');
+    }
+    eventDate.value = datePicker.value;
+    render();
+  }
+
+  function scheduleSave() {
+    setStatus('Guardando...');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveDay, 500);
+  }
+
+  async function saveDay() {
+    try {
+      const payload = {
+        action: 'saveDay',
+        fecha: datePicker.value,
+        tasks: state.tasks,
+        activities: state.activities,
+        inventory: state.inventory,
+        turno,
+        localName: localName.value
+      };
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (!json || json.error) throw new Error(json && json.error);
+      setStatus('Sincronizado con Sheets');
+    } catch (e) {
+      setStatus('Error al guardar, reintentando...');
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveDay, 2000);
+    }
+  }
+
+  function setTurno(v) {
+    turno = v;
+    [...turnoSeg.children].forEach(b => b.classList.toggle('active', b.dataset.v === v));
+  }
+  turnoSeg.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+    setTurno(e.target.dataset.v);
+    scheduleSave();
+  });
+
+  tipoSeg.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+    tipoActividad = e.target.dataset.v;
+    [...tipoSeg.children].forEach(b => b.classList.toggle('active', b.dataset.v === tipoActividad));
+    eventFields.style.display = tipoActividad === 'evento' ? 'block' : 'none';
+  });
+
+  function render() {
+    renderTasks();
+    renderActivities();
+    renderInventory();
+  }
+
+  const RING_CIRC = 2 * Math.PI * 16;
+
+  let editingTaskId = null;
+
+  function renderTasks() {
+    const list = $('taskList');
+    list.innerHTML = '';
+    const done = state.tasks.filter(t => t.status === 'done').length;
+    const total = state.tasks.length;
+    $('ringLabel').textContent = done + '/' + total;
+    const ringFg = $('ringFg');
+    ringFg.style.strokeDasharray = RING_CIRC;
+    const pct = total > 0 ? done / total : 0;
+    ringFg.style.strokeDashoffset = RING_CIRC * (1 - pct);
+
+    if (state.tasks.length === 0) { list.innerHTML = '<li class="empty">Sin tareas cargadas todavía.</li>'; return; }
+    state.tasks.forEach(t => {
+      const li = document.createElement('li');
+      const statusCls = t.status === 'done' ? ' status-done' : t.status === 'notdone' ? ' status-notdone' : '';
+      li.className = 'task-item' + statusCls;
+
+      if (t.id === editingTaskId) {
+        li.innerHTML =
+          '<div class="body"><input type="text" class="edit-input" data-id="' + t.id + '" maxlength="140" /></div>' +
+          '<button class="btn-edit" data-id="' + t.id + '" data-action="save" aria-label="Guardar">✓</button>' +
+          '<button class="del" data-id="' + t.id + '" data-action="cancel" aria-label="Cancelar">×</button>';
+        list.appendChild(li);
+        const input = li.querySelector('.edit-input');
+        input.value = t.text;
+        setTimeout(() => { input.focus(); input.select(); }, 0);
+        return;
+      }
+
+      li.innerHTML =
+        '<div class="body"><div class="txt editable" data-id="' + t.id + '"></div>' + (t.by ? '<div class="by-tag">— ' + esc(t.by) + '</div>' : '') + '</div>' +
+        '<div class="task-actions">' +
+          '<button class="btn-check' + (t.status === 'done' ? ' active' : '') + '" data-id="' + t.id + '" data-action="done" aria-label="Marcar hecha">✓</button>' +
+          '<button class="btn-x' + (t.status === 'notdone' ? ' active' : '') + '" data-id="' + t.id + '" data-action="notdone" aria-label="Marcar no hecha">✗</button>' +
+          '<button class="btn-edit" data-id="' + t.id + '" data-action="edit" aria-label="Editar tarea">✎</button>' +
+        '</div>' +
+        '<button class="del" data-id="' + t.id + '" aria-label="Eliminar">×</button>';
+      li.querySelector('.txt').textContent = t.text;
+      list.appendChild(li);
+    });
+  }
+
+  function saveTaskEdit(id, newText) {
+    const t = state.tasks.find(x => x.id === id);
+    if (t && newText.trim()) {
+      t.text = newText.trim();
+      scheduleSave();
+    }
+    editingTaskId = null;
+    render();
+  }
+
+  function fmtDMY(dateStr) { const [y,m,d] = dateStr.split('-'); return d + '/' + m + '/' + y; }
+
+  function gcalLink(a) {
+    const [y,m,d] = a.eventDate.split('-').map(Number);
+    const [h,min] = a.eventTime.split(':').map(Number);
+    const start = new Date(y, m-1, d, h, min);
+    const end = new Date(start.getTime() + 60*60*1000);
+    const fmt = (dt) => dt.getFullYear() + pad2(dt.getMonth()+1) + pad2(dt.getDate()) + 'T' + pad2(dt.getHours()) + pad2(dt.getMinutes()) + '00';
+    let details = a.text || '';
+    if (a.by) details += '\nRegistrado por ' + a.by;
+    if (a.link) details += (details ? '\n\n' : '') + a.link;
+    const params = new URLSearchParams({ action: 'TEMPLATE', text: a.text || 'Evento del turno', dates: fmt(start) + '/' + fmt(end), details });
+    return 'https://calendar.google.com/calendar/render?' + params.toString();
+  }
+
+  function renderActivities() {
+    const list = $('actList');
+    list.innerHTML = '';
+    $('actCount').textContent = state.activities.length;
+    if (state.activities.length === 0) { list.innerHTML = '<li class="empty">Sin actividades registradas todavía.</li>'; return; }
+    const sorted = [...state.activities].sort((a,b) => a.time.localeCompare(b.time));
+    sorted.forEach(a => {
+      const li = document.createElement('li');
+      li.className = 'activity-item';
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const tb = document.createElement('div'); tb.className = 'time-badge';
+      tb.textContent = a.time + (a.by ? ' · ' + a.by : '');
+      if (a.type === 'importante') { const t = document.createElement('span'); t.className = 'tag importante'; t.textContent = 'Importante'; tb.appendChild(t); }
+      if (a.type === 'evento') { const t = document.createElement('span'); t.className = 'tag evento'; t.textContent = 'Evento'; tb.appendChild(t); }
+      const delBtn = document.createElement('button'); delBtn.className = 'del'; delBtn.setAttribute('data-id', a.id); delBtn.textContent = '×';
+      meta.appendChild(tb); meta.appendChild(delBtn); li.appendChild(meta);
+
+      const txt = document.createElement('div'); txt.className = 'txt'; txt.textContent = a.text; li.appendChild(txt);
+
+      if (a.type === 'evento' && a.eventDate && a.eventTime) {
+        const em = document.createElement('div'); em.className = 'event-meta';
+        em.textContent = 'Programado para ' + fmtDMY(a.eventDate) + ' · ' + a.eventTime;
+        li.appendChild(em);
+        const actions = document.createElement('div'); actions.className = 'event-actions';
+        const gcal = document.createElement('a'); gcal.className = 'gcal'; gcal.href = gcalLink(a); gcal.target = '_blank'; gcal.rel = 'noopener noreferrer';
+        gcal.textContent = 'Agregar a Google Calendar'; actions.appendChild(gcal);
+        if (a.link) { const lk = document.createElement('a'); lk.href = a.link; lk.target = '_blank'; lk.rel = 'noopener noreferrer'; lk.textContent = 'Abrir enlace'; actions.appendChild(lk); }
+        li.appendChild(actions);
+      } else if (a.link) {
+        const actions = document.createElement('div'); actions.className = 'event-actions';
+        const lk = document.createElement('a'); lk.href = a.link; lk.target = '_blank'; lk.rel = 'noopener noreferrer'; lk.textContent = 'Abrir enlace'; actions.appendChild(lk);
+        li.appendChild(actions);
+      }
+      list.appendChild(li);
+    });
+  }
+
+  function renderInventory() {
+    const wrap = $('invTable');
+    wrap.innerHTML = '';
+    $('invCount').textContent = state.inventory.length;
+    const actionsWrap = $('invActions');
+    actionsWrap.innerHTML = '';
+    if (state.inventory.length === 0) {
+      wrap.innerHTML = '<div class="empty">Sin ajustes cargados todavía.</div>';
+      return;
+    }
+    state.inventory.forEach(item => {
+      const row = document.createElement('div');
+      const dateTxt = item.date ? fmtDMY(item.date) : '';
+      if (item.type === 'solicitud') {
+        row.className = 'inv-row solicitud';
+        const badge = document.createElement('div'); badge.className = 'inv-solicitud-badge';
+        badge.innerHTML = '<span class="tag-erp">Solicitud ERP</span>';
+        const num = document.createElement('span'); num.textContent = 'N° ' + item.solicitud;
+        badge.appendChild(num);
+        const date = document.createElement('div'); date.className = 'inv-date'; date.textContent = dateTxt;
+        const del = document.createElement('button'); del.className = 'del'; del.setAttribute('data-id', item.id); del.textContent = '×';
+        row.appendChild(badge); row.appendChild(date); row.appendChild(del);
+        wrap.appendChild(row);
+        return;
+      }
+      row.className = 'inv-row';
+      const sku = document.createElement('div'); sku.className = 'inv-sku'; sku.textContent = item.sku;
+      const desc = document.createElement('div'); desc.className = 'inv-desc'; desc.textContent = item.desc;
+      const qty = document.createElement('div'); qty.className = 'inv-qty ' + (item.qty < 0 ? 'neg' : item.qty > 0 ? 'pos' : '');
+      qty.textContent = (item.qty > 0 ? '+' : '') + item.qty;
+      const date = document.createElement('div'); date.className = 'inv-date'; date.textContent = dateTxt;
+      const del = document.createElement('button'); del.className = 'del'; del.setAttribute('data-id', item.id); del.textContent = '×';
+      row.appendChild(sku); row.appendChild(desc); row.appendChild(qty); row.appendChild(date); row.appendChild(del);
+      wrap.appendChild(row);
+    });
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'add-btn secondary small';
+    copyBtn.textContent = 'Copiar tabla';
+    copyBtn.addEventListener('click', copyInventory);
+    actionsWrap.appendChild(copyBtn);
+  }
+
+  function copyInventory() {
+    const dateOrDash = (d) => d ? fmtDMY(d) : '—';
+    const lines = state.inventory.map(i => i.type === 'solicitud'
+      ? [dateOrDash(i.date), 'Solicitud ERP', 'N° ' + i.solicitud, ''].join('\t')
+      : [dateOrDash(i.date), i.sku, i.desc, i.qty].join('\t'));
+    const text = 'Fecha\tSKU\tDescripción\tCantidad ajustada\n' + lines.join('\n');
+    const done = () => showToast('Tabla copiada');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+  function fallbackCopy(text, cb) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); cb(); } catch (e) { showToast('No se pudo copiar'); }
+    document.body.removeChild(ta);
+  }
+
+  function addTask() {
+    if (!requirePersona()) return;
+    const input = $('taskInput');
+    const val = input.value.trim();
+    if (!val) return;
+    state.tasks.push({ id: uid(), text: val, status: null, by: currentPersona() });
+    input.value = '';
+    render(); scheduleSave(); input.focus();
+  }
+
+  function addActivity() {
+    if (!requirePersona()) return;
+    const input = $('actInput');
+    const val = input.value.trim();
+    if (!val) return;
+    const time = actTime.value || nowHM();
+    const entry = { id: uid(), text: val, time, type: tipoActividad, by: currentPersona() };
+    if (tipoActividad === 'evento') {
+      if (!eventDate.value || !eventTime.value) { showToast('Completá fecha y hora del evento'); return; }
+      entry.eventDate = eventDate.value; entry.eventTime = eventTime.value; entry.link = eventLink.value.trim();
+    }
+    state.activities.push(entry);
+    input.value = ''; eventLink.value = ''; actTime.value = nowHM();
+    render(); scheduleSave(); input.focus();
+  }
+
+  function addInventory() {
+    if (!requirePersona()) return;
+    const sku = $('invSku').value.trim();
+    const desc = $('invDesc').value.trim();
+    const qtyRaw = $('invQty').value.trim();
+    if (!sku && !desc) { showToast('Ingresá al menos SKU o descripción'); return; }
+    const qty = qtyRaw === '' ? 0 : Number(qtyRaw);
+    state.inventory.push({ id: uid(), sku: sku || '—', desc: desc || '—', qty: isNaN(qty) ? 0 : qty, date: datePicker.value, by: currentPersona() });
+    $('invSku').value = ''; $('invDesc').value = ''; $('invQty').value = '';
+    render(); scheduleSave(); $('invSku').focus();
+  }
+
+  function addSolicitud() {
+    if (!requirePersona()) return;
+    const val = $('invSolicitud').value.trim();
+    if (!val) { showToast('Ingresá el N° de solicitud'); return; }
+    state.inventory.push({ id: uid(), type: 'solicitud', solicitud: val, date: datePicker.value, by: currentPersona() });
+    $('invSolicitud').value = '';
+    render(); scheduleSave();
+  }
+
+  function parsePasted(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    let added = 0;
+    lines.forEach(line => {
+      let parts = line.includes('\t') ? line.split('\t') : line.split(',');
+      parts = parts.map(p => p.trim());
+      if (parts.length < 2) return;
+      const sku = parts[0] || '—';
+      const desc = parts[1] || '—';
+      const qtyRaw = parts[2] !== undefined ? parts[2].replace(/[^\-0-9.]/g, '') : '0';
+      const qty = qtyRaw === '' ? 0 : Number(qtyRaw);
+      if (sku.toLowerCase() === 'sku' && desc.toLowerCase().includes('descrip')) return;
+      state.inventory.push({ id: uid(), sku, desc, qty: isNaN(qty) ? 0 : qty, date: datePicker.value, by: currentPersona() });
+      added++;
+    });
+    return added;
+  }
+
+  $('taskAddBtn').addEventListener('click', addTask);
+  $('taskInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') addTask(); });
+  $('actAddBtn').addEventListener('click', addActivity);
+  $('actInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && tipoActividad !== 'evento') addActivity(); });
+  $('invAddBtn').addEventListener('click', addInventory);
+  $('invQty').addEventListener('keydown', (e) => { if (e.key === 'Enter') addInventory(); });
+
+  $('taskList').addEventListener('click', (e) => {
+    const id = e.target.getAttribute('data-id'); if (!id) return;
+    const action = e.target.getAttribute('data-action');
+
+    if (e.target.classList.contains('txt') && e.target.classList.contains('editable')) {
+      editingTaskId = id;
+      render();
+      return;
+    }
+    if (action === 'edit') {
+      editingTaskId = id;
+      render();
+      return;
+    }
+    if (action === 'save') {
+      const input = $('taskList').querySelector('.edit-input[data-id="' + id + '"]');
+      saveTaskEdit(id, input ? input.value : '');
+      return;
+    }
+    if (action === 'cancel') {
+      editingTaskId = null;
+      render();
+      return;
+    }
+    if (action === 'done' || action === 'notdone') {
+      if (!requirePersona()) return;
+      const t = state.tasks.find(x => x.id === id);
+      if (t) {
+        t.status = t.status === action ? null : action;
+        if (t.status) t.by = currentPersona();
+      }
+      render(); scheduleSave();
+      return;
+    }
+    if (e.target.classList.contains('del')) {
+      state.tasks = state.tasks.filter(x => x.id !== id); render(); scheduleSave();
+    }
+  });
+
+  $('taskList').addEventListener('keydown', (e) => {
+    if (!e.target.classList.contains('edit-input')) return;
+    const id = e.target.getAttribute('data-id');
+    if (e.key === 'Enter') { saveTaskEdit(id, e.target.value); }
+    else if (e.key === 'Escape') { editingTaskId = null; render(); }
+  });
+  $('actList').addEventListener('click', (e) => {
+    const id = e.target.getAttribute('data-id'); if (!id) return;
+    if (e.target.classList.contains('del')) { state.activities = state.activities.filter(x => x.id !== id); render(); scheduleSave(); }
+  });
+  $('invTable').addEventListener('click', (e) => {
+    const id = e.target.getAttribute('data-id'); if (!id) return;
+    if (e.target.classList.contains('del')) { state.inventory = state.inventory.filter(x => x.id !== id); render(); scheduleSave(); }
+  });
+
+  $('pasteToggle').addEventListener('click', () => {
+    const box = $('pasteBox');
+    const open = box.classList.toggle('open');
+    $('pasteToggle').textContent = open ? 'Pegar varias filas desde Excel ▴' : 'Pegar varias filas desde Excel ▾';
+  });
+  $('pasteImportBtn').addEventListener('click', () => {
+    if (!requirePersona()) return;
+    const area = $('pasteArea');
+    const added = parsePasted(area.value);
+    if (added > 0) { area.value = ''; render(); scheduleSave(); showToast(added + ' fila(s) importadas'); }
+    else { showToast('No se detectaron filas válidas'); }
+  });
+
+  $('solicitudToggle').addEventListener('click', () => {
+    const box = $('solicitudBox');
+    const open = box.classList.toggle('open');
+    $('solicitudToggle').textContent = open ? 'Ingresar número de solicitud ▴' : 'Ingresar número de solicitud ▾';
+  });
+  $('solicitudAddBtn').addEventListener('click', addSolicitud);
+  $('invSolicitud').addEventListener('keydown', (e) => { if (e.key === 'Enter') addSolicitud(); });
+
+  localName.addEventListener('input', () => { localTitle.textContent = localName.value || 'Mi local'; });
+  localName.addEventListener('change', scheduleSave);
+  personaInput.addEventListener('input', updateAvatar);
+  datePicker.addEventListener('change', loadDay);
+
+  localTitle.textContent = localName.value;
+  loadDay();
+})();
+</script>
+</body>
+</html>
