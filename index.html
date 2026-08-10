@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitácora de turno</title>
+<style>
+  :root {
+    --bg: #F2F2F7;
+    --card: #FFFFFF;
+    --ink: #1C1C1E;
+    --ink-sec: #8E8E93;
+    --ink-tert: #C7C7CC;
+    --line: #E5E5EA;
+    --blue: #007AFF;
+    --blue-bg: #E8F1FF;
+    --green: #34C759;
+    --green-bg: #E4F8E9;
+    --orange: #FF9500;
+    --orange-bg: #FFF2E0;
+    --red: #FF3B30;
+    --red-bg: #FFE9E8;
+    --purple: #AF52DE;
+    --purple-bg: #F5E9FC;
+    --teal: #30B0C7;
+    --teal-bg: #E0F4F7;
+    --pink: #FF2D55;
+    --pink-bg: #FFE3EA;
+    --indigo: #5856D6;
+    --indigo-bg: #EBEAFC;
+    --amber: #FFCC00;
+    --amber-bg: #FFF9DB;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 9px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+    min-height: 100vh;
+    padding: 20px 14px 60px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1320px; margin: 0 auto; }
+
+  .header-simple { margin: 4px 4px 18px; }
+  #localName.page-title-input, .page-title-input {
+    display: inline-block; width: auto; max-width: 100%;
+    font-size: 26px; font-weight: 800; letter-spacing: -0.5px;
+    margin: 0 0 2px;
+    background: transparent; color: var(--blue);
+    border: none; border-bottom: 1.5px solid transparent; padding: 2px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+    outline: none;
+    caret-color: var(--blue);
+  }
+  #localName.page-title-input:focus { border-bottom-color: var(--blue); }
+  .page-subtitle {
+    font-size: 16px; font-weight: 600; letter-spacing: -0.1px;
+    color: var(--ink); margin: 0 0 6px;
+  }
+  .page-address {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 13px; font-weight: 500; color: var(--ink-tert);
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 16px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03);
+    border-left: 4px solid transparent;
+  }
+  .card--blue { border-left-color: var(--blue); }
+  .card--orange { border-left-color: var(--orange); }
+  .card--purple { border-left-color: var(--purple); }
+  .card--teal { border-left-color: var(--teal); }
+  .card--pink { border-left-color: var(--pink); }
+  .card--indigo { border-left-color: var(--indigo); }
+  .card--amber { border-left-color: var(--amber); }
+  .card--green { border-left-color: var(--green); }
+
+  .area-badge {
+    display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.3px; padding: 4px 10px; border-radius: 999px; margin: 0 0 8px;
+  }
+  .area-blue { background: var(--blue-bg); color: var(--blue); }
+  .area-orange { background: var(--orange-bg); color: var(--orange); }
+  .area-purple { background: var(--purple-bg); color: var(--purple); }
+  .area-teal { background: var(--teal-bg); color: var(--teal); }
+  .area-pink { background: var(--pink-bg); color: var(--pink); }
+  .area-indigo { background: var(--indigo-bg); color: var(--indigo); }
+  .area-amber { background: var(--amber-bg); color: #8A6D00; }
+  .area-green { background: var(--green-bg); color: var(--green); }
+
+  .mes-table-wrap {
+    overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md);
+    -webkit-overflow-scrolling: touch;
+  }
+  .mes-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 620px; }
+  .mes-table th {
+    text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.4px; color: var(--ink-sec); background: var(--bg);
+    padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap;
+    position: sticky; top: 0;
+  }
+  .mes-table td {
+    padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle;
+  }
+  .mes-table tbody tr:last-child td { border-bottom: none; }
+  .mes-table tbody tr:hover td { background: var(--bg); }
+  .mes-table tr.row-done td { opacity: 0.55; }
+  .mes-table tr.row-done .tarea-cell div:first-child { text-decoration: line-through; }
+  .mes-table .tarea-cell { font-weight: 500; min-width: 220px; color: var(--ink); }
+  .mes-table .proceso-cell { color: var(--ink-sec); font-size: 12px; min-width: 190px; }
+  .mes-table .periodo-cell { white-space: nowrap; }
+  .mes-table .estado-cell { white-space: nowrap; }
+  .mes-table .mes-periodo {
+    display: inline-block; font-size: 11px; font-weight: 600; color: var(--ink-sec);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 10px;
+  }
+
+  .mes-item {
+    background: var(--bg); border-radius: var(--radius-md); padding: 12px; margin-bottom: 6px;
+  }
+  .mes-item:last-child { margin-bottom: 0; }
+  .mes-item .mes-periodo {
+    display: inline-block; font-size: 11px; font-weight: 600; color: var(--ink-sec);
+    background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 10px;
+  }
+  .task-row.row-done { opacity: 0.55; }
+  .task-row.row-done .txt { text-decoration: line-through; }
+  .task-row.row-notdone .txt { color: var(--red); }
+
+  .card-title {
+    font-size: 13px; font-weight: 600; color: var(--ink-sec);
+    text-transform: uppercase; letter-spacing: 0.4px;
+    margin: 0 4px 10px;
+  }
+
+  .field-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .field-row:last-child { margin-bottom: 0; }
+  .field-label { font-size: 12px; color: var(--ink-sec); font-weight: 500; margin-left: 4px; }
+  input[type="text"], input[type="url"], input[type="number"], input[type="date"], input[type="time"], input[type="month"], textarea {
+    width: 100%;
+    background: var(--bg);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 11px 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+    outline: none;
+  }
+  input::placeholder, textarea::placeholder { color: var(--ink-tert); }
+  input:focus, textarea:focus { box-shadow: 0 0 0 2px var(--blue); }
+  textarea { resize: vertical; min-height: 70px; line-height: 1.4; }
+
+  .month-field { position: relative; }
+  .month-field input[type="month"] { color: transparent; position: relative; z-index: 1; }
+  .month-field input[type="month"]::-webkit-datetime-edit-fields-wrapper,
+  .month-field input[type="month"]::-webkit-datetime-edit-text,
+  .month-field input[type="month"]::-webkit-datetime-edit-month-field,
+  .month-field input[type="month"]::-webkit-datetime-edit-year-field { color: transparent; }
+  .month-field-label {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 15px; font-weight: 500; color: var(--ink);
+    pointer-events: none; z-index: 2;
+  }
+
+  .name-row { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--blue-bg); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 15px; flex-shrink: 0;
+  }
+  .name-row input { flex: 1; }
+
+  .persona-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .persona-chip {
+    font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--ink-sec);
+    cursor: pointer; font-family: inherit;
+  }
+  .persona-chip:active { opacity: 0.8; }
+  .persona-chip.active { background: var(--blue-bg); color: var(--blue); border-color: transparent; }
+  .persona-chip#qfTurnoChip.active { background: var(--purple-bg); color: var(--purple); border-color: transparent; }
+
+  .seg {
+    display: flex; background: var(--bg); border-radius: var(--radius-sm);
+    padding: 2px; gap: 2px;
+  }
+  .seg button {
+    flex: 1; border: none; background: transparent; padding: 8px 6px;
+    font-size: 13px; font-weight: 500; color: var(--ink-sec);
+    border-radius: 7px; cursor: pointer; font-family: inherit;
+  }
+  .seg button.active { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.12); font-weight: 600; }
+
+  .toprow { display: flex; gap: 12px; flex-wrap: wrap; }
+  .toprow > div { flex: 1; min-width: 140px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+  .add-btn {
+    width: 100%; background: var(--blue); color: #fff; border: none;
+    border-radius: var(--radius-sm); padding: 11px; font-size: 15px; font-weight: 600;
+    cursor: pointer; font-family: inherit; margin-top: 10px;
+  }
+  .add-btn:active { opacity: 0.8; }
+  .add-btn.secondary { background: var(--bg); color: var(--blue); }
+  .add-btn.small { width: auto; padding: 8px 14px; font-size: 13px; margin-top: 0; }
+
+  .count-pill {
+    font-size: 12px; font-weight: 600; color: var(--ink-sec);
+    background: var(--bg); padding: 4px 10px; border-radius: 999px;
+  }
+  .row-between { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 10px; }
+  .row-between .card-title { margin: 0; }
+
+  .ring-wrap { position: relative; width: 46px; height: 46px; flex-shrink: 0; }
+  .ring-wrap svg { width: 46px; height: 46px; transform: rotate(-90deg); }
+  .ring-wrap circle { fill: none; stroke-width: 4; }
+  .ring-bg { stroke: var(--bg); }
+  .ring-fg { stroke: var(--green); stroke-linecap: round; transition: stroke-dashoffset 0.35s ease; }
+  .ring-label {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--ink);
+  }
+
+  .task-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-check, .btn-x {
+    width: 27px; height: 27px; border-radius: 50%; border: 1.5px solid var(--ink-tert);
+    background: transparent; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink-tert); padding: 0;
+  }
+  @media (max-width: 500px) {
+    .btn-check, .btn-x, .btn-edit, .del { width: 34px; height: 34px; font-size: 15px; }
+  }
+  .btn-check.active { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn-x.active { background: var(--red); border-color: var(--red); color: #fff; }
+  .txt { font-size: 15px; line-height: 1.35; word-break: break-word; }
+  .txt.editable { cursor: text; }
+  .mes-table tr.row-notdone .tarea-cell div:first-child { color: var(--red); }
+
+  .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .empty { padding: 24px 10px; text-align: center; color: var(--ink-tert); font-size: 14px; }
+
+  .edit-input {
+    width: 100%; background: var(--card); border: 1.5px solid var(--blue);
+    border-radius: 8px; padding: 7px 9px; font-size: 15px; font-family: inherit;
+    color: var(--ink); outline: none;
+  }
+  .btn-edit {
+    width: 27px; height: 27px; border-radius: 50%; border: none; background: transparent;
+    color: var(--ink-tert); cursor: pointer; font-size: 15px; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0; padding: 0;
+  }
+  .btn-edit:active { color: var(--blue); }
+  .by-tag { font-size: 11px; color: var(--ink-sec); margin-top: 2px; }
+  .del { background: none; border: none; color: var(--ink-tert); cursor: pointer; font-size: 20px; line-height: 1; padding: 0 2px; flex-shrink: 0; }
+  .del:active { color: var(--red); }
+
+  .activity-item { background: var(--bg); border-radius: var(--radius-md); padding: 12px; }
+  .activity-item .meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .time-badge { font-size: 12px; font-weight: 600; color: var(--ink-sec); display: flex; align-items: center; gap: 6px; }
+  .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 2px 7px; border-radius: 999px; }
+  .tag.importante { background: var(--red-bg); color: var(--red); }
+  .tag.evento { background: var(--orange-bg); color: var(--orange); }
+  .activity-item .txt { font-size: 15px; line-height: 1.35; word-break: break-word; }
+  .event-meta { font-size: 12px; color: var(--ink-sec); margin-top: 5px; }
+  .event-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .event-actions a {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 600; padding: 6px 11px; border-radius: 999px;
+    text-decoration: none; background: var(--card); color: var(--ink-sec); border: 1px solid var(--line);
+  }
+  .event-actions a.gcal { background: var(--orange-bg); color: var(--orange); border: none; }
+
+  .inv-add { display: flex; flex-direction: column; gap: 8px; }
+  .inv-fields { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; }
+  @media (max-width: 500px) { .inv-fields { grid-template-columns: 1fr; } }
+  .inv-table { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+  .inv-row {
+    display: grid; grid-template-columns: 90px 1fr 70px 60px 24px; align-items: center; gap: 8px;
+    background: var(--bg); border-radius: var(--radius-md); padding: 10px 12px;
+  }
+  @media (max-width: 560px) { .inv-row { grid-template-columns: 1fr; gap: 2px; } .inv-row .del { justify-self: end; } }
+  .inv-date { font-size: 11px; color: var(--ink-sec); text-align: right; }
+  .inv-sku { font-size: 12px; font-weight: 700; color: var(--blue); font-family: ui-monospace, 'SF Mono', monospace; }
+  .inv-desc { font-size: 14px; color: var(--ink); word-break: break-word; }
+  .inv-qty { font-size: 14px; font-weight: 700; text-align: right; }
+  .inv-qty.neg { color: var(--red); }
+  .inv-qty.pos { color: var(--green); }
+  .inv-row.solicitud { grid-template-columns: 1fr 60px 24px; }
+  .inv-solicitud-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; color: var(--ink);
+  }
+  .inv-solicitud-badge .tag-erp {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+    padding: 2px 7px; border-radius: 999px; background: var(--blue-bg); color: var(--blue);
+  }
+  .paste-toggle { font-size: 13px; color: var(--blue); font-weight: 600; background: none; border: none; cursor: pointer; padding: 6px 4px; text-align: left; font-family: inherit; }
+  .paste-box { display: none; flex-direction: column; gap: 8px; }
+  .paste-box.open { display: flex; }
+  .hint { font-size: 11px; color: var(--ink-sec); margin: -2px 4px 0; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  input[type="file"] {
+    background: var(--bg); border-radius: var(--radius-sm); padding: 9px 10px;
+    font-size: 13px; color: var(--ink-sec); width: 100%;
+  }
+  input[type="file"]::file-selector-button {
+    background: var(--blue); color: #fff; border: none; border-radius: 7px;
+    padding: 6px 12px; font-size: 12px; font-weight: 600; margin-right: 10px; cursor: pointer;
+  }
+
+  .file-drop {
+    border: 1.5px dashed var(--line); border-radius: var(--radius-sm);
+    padding: 8px 8px 10px; background: var(--bg); outline: none;
+  }
+  .file-drop.dragover { border-color: var(--blue); background: var(--blue-bg); }
+  .file-drop.pasted { border-color: var(--green); background: var(--green-bg); }
+  .file-drop input[type="file"] { background: transparent; padding: 4px 0; }
+  .file-drop-hint {
+    font-size: 11px; color: var(--ink-tert); text-align: center; margin-top: 4px;
+  }
+
+  .ad-item { background: var(--bg); border-radius: var(--radius-md); padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .ad-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .ad-name { font-size: 15px; font-weight: 600; word-break: break-word; }
+  .ad-badge {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+    padding: 3px 9px; border-radius: 999px; flex-shrink: 0; white-space: nowrap;
+  }
+  .ad-badge.urgent { background: var(--red-bg); color: var(--red); }
+  .ad-badge.warn { background: var(--orange-bg); color: var(--orange); }
+  .ad-dates { font-size: 12px; color: var(--ink-sec); }
+  .ad-by { font-size: 11px; color: var(--ink-tert); }
+  .ad-status-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    font-size: 12px; font-weight: 600; padding: 7px 13px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink-sec); cursor: pointer;
+  }
+  .chip.active-green { background: var(--green-bg); color: var(--green); border-color: transparent; }
+  .chip.active-red { background: var(--red-bg); color: var(--red); border-color: transparent; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: rgba(28,28,30,0.92); color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+    z-index: 50;
+  }
+  .toast.show { opacity: 1; }
+
+  .status-bar { text-align: center; font-size: 12px; color: var(--ink-tert); margin: 4px 0 8px; }
+
+  .week-card { padding-bottom: 14px; }
+  .week-total {
+    font-size: 20px; font-weight: 800; color: var(--ink); margin: 0 4px 12px;
+    letter-spacing: -0.3px;
+  }
+  .week-total .n { color: var(--blue); }
+  .week-days { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+  .week-day {
+    flex: 1; min-width: 42px; text-align: center; border-radius: var(--radius-sm);
+    padding: 8px 4px; cursor: pointer; border: 1.5px solid transparent;
+    background: var(--bg);
+  }
+  .week-day.today { border-color: var(--blue); }
+  .week-day .wd-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--ink-sec); }
+  .week-day .wd-date { font-size: 13px; font-weight: 600; color: var(--ink); margin: 2px 0 4px; }
+  .week-day .wd-dot {
+    width: 22px; height: 22px; margin: 0 auto; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--ink-tert); background: var(--card);
+  }
+  .week-day.pending .wd-dot { background: var(--red-bg); color: var(--red); }
+  .week-day.complete .wd-dot { background: var(--green-bg); color: var(--green); }
+  .week-day.empty .wd-dot { background: var(--card); color: var(--ink-tert); }
+
+  @media (max-width: 480px) {
+    body { padding: 14px 10px 50px; }
+    .wrap { max-width: 100%; }
+    input[type="text"], input[type="url"], input[type="number"], input[type="date"],
+    input[type="time"], input[type="month"], textarea, select { font-size: 16px; }
+    .page-title-input, .page-title-input.page-title-input { font-size: 22px; }
+    .page-subtitle { font-size: 14px; }
+    .card { padding: 14px 12px; }
+    .week-day { min-width: 38px; padding: 6px 3px; }
+    .week-total { font-size: 17px; }
+  }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header-simple">
+    <input type="text" class="page-title-input" id="localName" value="Local 884" maxlength="60" />
+    <span id="titleMirror" class="page-title-input" style="position:absolute; visibility:hidden; white-space:pre; left:-9999px; top:-9999px; width:auto;"></span>
+    <div class="page-subtitle">Providencia Tobalaba</div>
+    <div class="page-address">📍 Av. Providencia 2629</div>
+  </div>
+  <div class="status-bar" id="statusBar">Sincronizado</div>
+
+  <div class="card card--blue week-card">
+    <div class="row-between">
+      <div class="card-title">Resumen semanal</div>
+      <span class="count-pill" id="weekRange">—</span>
+    </div>
+    <div class="week-total" id="weekTotal">Cargando pendientes de la semana...</div>
+    <div class="week-days" id="weekDays"></div>
+  </div>
+
+  <div class="card">
+    <div class="toprow">
+      <div class="field-row">
+        <span class="field-label">Fecha</span>
+        <input type="date" id="datePicker" />
+      </div>
+      <div class="field-row">
+        <span class="field-label">Turno</span>
+        <div class="seg" id="turnoSeg">
+          <button data-v="Mañana" class="active">Mañana</button>
+          <button data-v="Tarde">Tarde</button>
+        </div>
+      </div>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Encargado de turno</span>
+      <div class="name-row">
+        <div class="avatar" id="avatarInitial">?</div>
+        <input type="text" id="personaInput" placeholder="Tu nombre" maxlength="40" />
+      </div>
+      <div class="persona-chips" id="personaChips">
+        <button type="button" class="persona-chip" data-name="Vania">Vania</button>
+        <button type="button" class="persona-chip" data-name="Meylin">Meylin</button>
+        <button type="button" class="persona-chip" id="qfTurnoChip" data-role="qf">QF Turno</button>
+      </div>
+      <div class="field-row" id="qfTurnoRow" style="display:none; margin-top: 8px;">
+        <span class="field-label">Nombre del QF de turno (reemplazo)</span>
+        <div class="name-row">
+          <input type="text" id="qfTurnoInput" placeholder="Nombre del QF" maxlength="40" />
+          <button type="button" class="add-btn small" id="qfTurnoConfirm">Usar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card card--blue">
+      <div class="row-between">
+        <div class="card-title">Tareas del día</div>
+        <div class="ring-wrap">
+          <svg viewBox="0 0 40 40">
+            <circle class="ring-bg" cx="20" cy="20" r="16"></circle>
+            <circle class="ring-fg" id="ringFg" cx="20" cy="20" r="16"></circle>
+          </svg>
+          <div class="ring-label" id="ringLabel">0/0</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <input type="text" id="taskInput" placeholder="Agregar tarea adicional" maxlength="140" />
+      </div>
+      <button class="add-btn" id="taskAddBtn">Agregar tarea</button>
+      <div id="taskList" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="card card--orange">
+      <div class="row-between">
+        <div class="card-title">Actividades del turno</div>
+        <span class="count-pill" id="actCount">0</span>
+      </div>
+      <div class="field-row">
+        <input type="text" id="actInput" placeholder="Ej: Llegó pedido de proveedor" maxlength="200" />
+      </div>
+      <div class="toprow">
+        <div class="field-row">
+          <span class="field-label">Hora del registro</span>
+          <input type="time" id="actTime" />
+        </div>
+        <div class="field-row">
+          <span class="field-label">Tipo</span>
+          <div class="seg" id="tipoSeg">
+            <button data-v="normal" class="active">Normal</button>
+            <button data-v="importante">Importante</button>
+          </div>
+        </div>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Adjuntar foto, PDF o Excel (opcional)</span>
+        <div class="file-drop" id="actArchivoZone" tabindex="0">
+          <input type="file" id="actArchivo" accept="application/pdf,image/*,.xls,.xlsx,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+          <div class="file-drop-hint">o arrastrá un archivo, o hacé click acá y pegá una captura (Ctrl+V)</div>
+        </div>
+      </div>
+      <button class="add-btn" id="actAddBtn">Registrar actividad</button>
+      <ul class="list" id="actList" style="margin-top:12px;"></ul>
+    </div>
+
+    <div class="card card--purple">
+      <div class="row-between">
+        <div class="card-title">Eventos programados</div>
+        <span class="count-pill" id="eventCount">0</span>
+      </div>
+      <div class="field-row">
+        <input type="text" id="evInput" placeholder="Ej: Reunión de seguimiento" maxlength="200" />
+      </div>
+      <div class="toprow">
+        <div class="field-row">
+          <span class="field-label">Fecha del evento</span>
+          <input type="date" id="evFecha" />
+        </div>
+        <div class="field-row">
+          <span class="field-label">Hora del evento</span>
+          <input type="time" id="evHora" />
+        </div>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Enlace (opcional)</span>
+        <input type="url" id="evLink" placeholder="https://..." />
+      </div>
+      <div class="field-row">
+        <span class="field-label">Adjuntar foto, PDF o Excel (opcional)</span>
+        <div class="file-drop" id="evArchivoZone" tabindex="0">
+          <input type="file" id="evArchivo" accept="application/pdf,image/*,.xls,.xlsx,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+          <div class="file-drop-hint">o arrastrá un archivo, o hacé click acá y pegá una captura (Ctrl+V)</div>
+        </div>
+      </div>
+      <button class="add-btn" id="evAddBtn">Registrar evento</button>
+      <ul class="list" id="eventList" style="margin-top:12px;"></ul>
+    </div>
+
+  </div>
+
+  <div class="card card--teal">
+    <div class="row-between">
+      <div class="card-title">Ajuste de inventario</div>
+      <span class="count-pill" id="invCount">0</span>
+    </div>
+
+    <div class="inv-add">
+      <div class="inv-fields">
+        <input type="text" id="invSku" placeholder="SKU" maxlength="40" />
+        <input type="text" id="invDesc" placeholder="Descripción del producto" maxlength="120" />
+        <input type="number" id="invQty" placeholder="Cant. +/-" />
+      </div>
+      <button class="add-btn" id="invAddBtn">Agregar ajuste</button>
+    </div>
+
+    <button class="paste-toggle" id="pasteToggle">Pegar varias filas desde Excel ▾</button>
+    <div class="paste-box" id="pasteBox">
+      <div class="hint">Pegá filas copiadas de una planilla: SKU, descripción y cantidad separadas por tabulación o coma, una fila por línea.</div>
+      <textarea id="pasteArea" placeholder="SKU-001	Yerba mate 1kg	-3
+SKU-002	Aceite girasol 900ml	5"></textarea>
+      <div class="btn-row">
+        <button class="add-btn small" id="pasteImportBtn">Importar filas</button>
+      </div>
+    </div>
+
+    <button class="paste-toggle" id="solicitudToggle">Ingresar número de solicitud ▾</button>
+    <div class="paste-box" id="solicitudBox">
+      <div class="hint">Si no vas a detallar el listado completo, registrá solo el número de solicitud que generó el ERP.</div>
+      <div class="toprow">
+        <div class="field-row" style="margin-bottom:0;">
+          <input type="text" id="invSolicitud" placeholder="N° de solicitud" maxlength="40" />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="add-btn small" id="solicitudAddBtn">Registrar solicitud</button>
+      </div>
+    </div>
+
+    <div class="inv-table" id="invTable"></div>
+
+    <div class="btn-row" style="margin-top:12px;" id="invActions"></div>
+  </div>
+
+  <div class="card card--pink">
+    <div class="row-between">
+      <div class="card-title">Publicidad</div>
+      <span class="count-pill" id="adCount">0</span>
+    </div>
+
+    <div class="field-row">
+      <input type="text" id="adNombre" placeholder="Nombre de la publicidad" maxlength="100" />
+    </div>
+    <div class="toprow">
+      <div class="field-row">
+        <span class="field-label">Fecha de implementación</span>
+        <input type="date" id="adFechaImpl" />
+      </div>
+      <div class="field-row">
+        <span class="field-label">Fecha de retiro</span>
+        <input type="date" id="adFechaRetiro" />
+      </div>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Foto o PDF de cómo se implementó</span>
+      <div class="file-drop" id="adArchivoZone" tabindex="0">
+        <input type="file" id="adArchivo" accept="application/pdf,image/*" />
+        <div class="file-drop-hint">o arrastrá un archivo, o hacé click acá y pegá una captura (Ctrl+V)</div>
+      </div>
+    </div>
+    <button class="add-btn" id="adAddBtn">Registrar publicidad</button>
+
+    <ul class="list" id="adList" style="margin-top:12px;"></ul>
+  </div>
+
+  <div class="card card--indigo">
+    <div class="row-between">
+      <div class="card-title">Marca Precios</div>
+      <span class="count-pill" id="mpCount">0</span>
+    </div>
+
+    <div class="field-row">
+      <input type="text" id="mpNombre" placeholder="Nombre del marca precios" maxlength="100" />
+    </div>
+    <div class="toprow">
+      <div class="field-row">
+        <span class="field-label">Fecha de implementación</span>
+        <input type="date" id="mpFechaImpl" />
+      </div>
+      <div class="field-row">
+        <span class="field-label">Fecha de retiro</span>
+        <input type="date" id="mpFechaRetiro" />
+      </div>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Foto o PDF de cómo se implementó</span>
+      <div class="file-drop" id="mpArchivoZone" tabindex="0">
+        <input type="file" id="mpArchivo" accept="application/pdf,image/*" />
+        <div class="file-drop-hint">o arrastrá un archivo, o hacé click acá y pegá una captura (Ctrl+V)</div>
+      </div>
+    </div>
+    <button class="add-btn" id="mpAddBtn">Registrar marca precios</button>
+
+    <ul class="list" id="mpList" style="margin-top:12px;"></ul>
+  </div>
+
+  <div class="card card--amber">
+    <div class="row-between">
+      <div class="card-title">Tareas mensuales</div>
+      <div class="ring-wrap">
+        <svg viewBox="0 0 40 40">
+          <circle class="ring-bg" cx="20" cy="20" r="16"></circle>
+          <circle class="ring-fg" id="mesRingFg" style="stroke: var(--amber);" cx="20" cy="20" r="16"></circle>
+        </svg>
+        <div class="ring-label" id="mesRingLabel">0/0</div>
+      </div>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Mes</span>
+      <div class="month-field">
+        <input type="month" id="mesPicker" />
+        <span class="month-field-label" id="mesPickerLabel"></span>
+      </div>
+    </div>
+    <div id="mesGroups" style="margin-top: 12px;"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <footer style="margin-top:18px; padding:14px 16px; text-align:center;">
+    <p style="font-size:11px; line-height:1.6; color:var(--ink-tert); margin:0;">
+      Las actividades y tareas descritas corresponden a la operación interna de este local.
+      Esta herramienta fue desarrollada con apoyo de inteligencia artificial (Claude® de Anthropic) y su contenido tiene exclusivamente fines de apoyo operacional interno.
+      Se prohíbe compartir información confidencial o de uso interno con terceros ajenos a la empresa.
+    </p>
+  </footer>
+</div>
+
+<script>
+(function() {
+  const DAILY_TASKS = [
+    { tarea: 'Recepción de mercadería', proceso: 'PDA' },
+    { tarea: 'Auditoria de medicamentos refrigerados', proceso: '' },
+    { tarea: 'Auditoria de medicamentos controlados', proceso: '' },
+    { tarea: 'Reporte por temperatura', proceso: 'Alerta' },
+    { tarea: 'Monitoreo de recepción ciega', proceso: 'ERP' },
+    { tarea: 'Consulta estado de diferencia de despacho', proceso: 'ERP' },
+    { tarea: 'Revisar canjes', proceso: 'F11 + !=0 + Ctrl F11' },
+    { tarea: 'Revisar tránsito', proceso: 'F11 + !=0 + Ctrl F11' },
+    { tarea: 'Revisar disponible', proceso: 'F11 + <0 + Ctrl F11' },
+    { tarea: 'Revisar vitrina', proceso: 'F11 + !=0 + Ctrl F11' },
+    { tarea: 'Revisar diferencias', proceso: 'F11 + !=0 + Ctrl F11' },
+    { tarea: 'Realizar códigos de autorización', proceso: '' },
+    { tarea: 'Toma de temperatura (a.m.) — Oficina (1)', proceso: '' },
+    { tarea: 'Toma de temperatura (a.m.) — Sala (2)', proceso: '' },
+    { tarea: 'Toma de temperatura (a.m.) — Refrigeradores (3)', proceso: '' },
+    { tarea: 'Toma de temperatura (a.m.) — Visicooler (1)', proceso: '' },
+    { tarea: 'Guía de controlados', proceso: 'TAKARY' },
+    { tarea: 'Realizar "Teamcore" (a partir de las 12:00 p.m)', proceso: '' },
+    { tarea: 'Realizar arqueo de valores', proceso: 'Comunidad SB' },
+    { tarea: 'Ingresar GD de medicamentos controlados', proceso: 'Excel' },
+    { tarea: 'Ingresar GD de medicamentos controlados', proceso: 'Libro' },
+    { tarea: 'Prosegur (Jueves)', proceso: '' },
+    { tarea: 'Pagar sencillo', proceso: '' },
+    { tarea: 'Pedir sencillo', proceso: '' },
+    { tarea: 'Inventario CTRL-SELECTIVO', proceso: '' },
+    { tarea: 'Inventario CTRL-BRECHA', proceso: '' },
+    { tarea: 'Realizar Brecha', proceso: 'TAKARY' },
+    { tarea: 'Revisar y publicar NPS', proceso: '' },
+    { tarea: 'Revisar y publicar concursos', proceso: '' },
+    { tarea: 'Entregar recetario magistral', proceso: '' },
+    { tarea: 'Recepción de GD recetario magistral', proceso: 'ERP' },
+    { tarea: 'Realizar GD de bandejas vacías', proceso: '' },
+    { tarea: 'Realizar GD de cooler', proceso: '' },
+    { tarea: 'Realizar GD de data logger', proceso: '' },
+    { tarea: 'Realizar GD de memos', proceso: '' },
+    { tarea: 'Realizar GD de documentos que se envían por valija', proceso: '' },
+    { tarea: 'Confirmar GD pendientes', proceso: '' },
+    { tarea: 'Ingresar recetas de bzd', proceso: 'Libro' },
+    { tarea: 'Ingresar recetas de psicotrópicos', proceso: 'Libro' },
+    { tarea: 'Ingresar recetas de estupefacientes', proceso: 'Libro' },
+    { tarea: 'Ingresar recetas cheques', proceso: 'Excel' },
+    { tarea: 'Ingresar recetas retenidas sin control de stock', proceso: '' },
+    { tarea: 'Ingresar recetas recetario magistral', proceso: 'Libro' },
+    { tarea: 'Toma de temperatura (p.m.) — Oficina (1)', proceso: '' },
+    { tarea: 'Toma de temperatura (p.m.) — Sala (2)', proceso: '' },
+    { tarea: 'Toma de temperatura (p.m.) — Refrigeradores (3)', proceso: '' },
+    { tarea: 'Toma de temperatura (p.m.) — Visicooler (1)', proceso: '' },
+    { tarea: 'Archivar documentos pendientes', proceso: '' },
+    { tarea: 'Revisar e implementar exhibiciones', proceso: '' }
+  ];
+
+  // Textos con los que se guardaban las tareas antes de separar Tarea / Proceso.
+  // Se usan solo para migrar registros viejos guardados en Sheets al nuevo formato.
+  const OLD_DAILY_TASK_TEXT = [
+    'Recepción de mercadería (PDA)', 'Auditoria de medicamentos refrigerados', 'Auditoria de medicamentos controlados',
+    'Reporte por temperatura (Alerta)', 'Monitoreo de recepción ciega (ERP)', 'Consulta estado de diferencia de despacho (ERP)',
+    'Revisar canjes (F11 + !=0 + Ctrl F11)', 'Revisar tránsito (F11 + !=0 + Ctrl F11)', 'Revisar disponible (F11 + <0 + Ctrl F11)',
+    'Revisar vitrina (F11 + !=0 + Ctrl F11)', 'Revisar diferencias (F11 + !=0 + Ctrl F11)', 'Realizar códigos de autorización',
+    'Toma de temperatura (a.m.) — Oficina (1)', 'Toma de temperatura (a.m.) — Sala (2)', 'Toma de temperatura (a.m.) — Refrigeradores (3)',
+    'Toma de temperatura (a.m.) — Visicooler (1)', 'Takary guía de controlados', 'Realizar "Teamcore" (a partir de las 12:00 p.m)',
+    'Realizar arqueo de valores (Comunidad SB)', 'Ingresar GD de medicamentos controlados (Excel)', 'Ingresar GD de medicamentos controlados (Libro)',
+    'Prosegur (Jueves)', 'Pagar sencillo', 'Pedir sencillo', 'Inventario CTRL-SELECTIVO', 'Inventario CTRL-BRECHA',
+    'Realizar Takary Brecha', 'Revisar y publicar NPS', 'Revisar y publicar concursos', 'Entregar recetario magistral',
+    'Recepción de GD recetario magistral (ERP)', 'Realizar GD de bandejas vacías', 'Realizar GD de cooler', 'Realizar GD de data logger',
+    'Realizar GD de memos', 'Realizar GD de documentos que se envían por valija', 'Confirmar GD pendientes',
+    'Ingresar recetas de bzd (Libro)', 'Ingresar recetas de psicotrópicos (Libro)', 'Ingresar recetas de estupefacientes (Libro)',
+    'Ingresar recetas cheques (Excel)', 'Ingresar recetas retenidas sin control de stock', 'Ingresar recetas recetario magistral (Libro)',
+    'Toma de temperatura (p.m.) — Oficina (1)', 'Toma de temperatura (p.m.) — Sala (2)', 'Toma de temperatura (p.m.) — Refrigeradores (3)',
+    'Toma de temperatura (p.m.) — Visicooler (1)', 'Archivar documentos pendientes', 'Revisar e implementar exhibiciones'
+  ];
+  const TASK_MIGRATION_MAP = new Map(OLD_DAILY_TASK_TEXT.map((oldText, i) => [oldText, DAILY_TASKS[i]]));
+
+  function migrateTasks(tasks) {
+    let changed = false;
+    const migrated = tasks.map(t => {
+      if (t.proceso !== undefined) return t;
+      const match = TASK_MIGRATION_MAP.get(t.text);
+      changed = true;
+      if (match) return { ...t, text: match.tarea, proceso: match.proceso };
+      return { ...t, proceso: '' };
+    });
+    return { migrated, changed };
+  }
+
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbziUvp0xwOkxBTMVWCXmR45_WzAKhPUaoM3RQm2nXCIDByjpzbDxd0Apv5YLbN1igM6bw/exec';
+
+  const $ = (id) => document.getElementById(id);
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); };
+  const nowHM = () => { const d = new Date(); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); };
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  const esc = (s) => String(s == null ? '' : s);
+
+  const datePicker = $('datePicker');
+  const localName = $('localName');
+  const statusBar = $('statusBar');
+  const personaInput = $('personaInput');
+  const avatarInitial = $('avatarInitial');
+  const toast = $('toast');
+
+  const turnoSeg = $('turnoSeg');
+  const tipoSeg = $('tipoSeg');
+  const actTime = $('actTime');
+  const evFecha = $('evFecha');
+  const evHora = $('evHora');
+  const evLink = $('evLink');
+
+  let turno = 'Mañana';
+  let tipoActividad = 'normal';
+
+  datePicker.value = todayStr();
+  actTime.value = nowHM();
+
+  let state = { tasks: [], activities: [], inventory: [] };
+  let saveTimer = null;
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+
+  function setStatus(text) { statusBar.textContent = text; }
+
+  function currentPersona() { return personaInput.value.trim(); }
+
+  function requirePersona() {
+    if (!currentPersona()) {
+      showToast('Ingresá el nombre de quien está de turno');
+      personaInput.focus();
+      return false;
+    }
+    return true;
+  }
+
+  function updateAvatar() {
+    const v = currentPersona();
+    avatarInitial.textContent = v ? v.trim()[0].toUpperCase() : '?';
+  }
+
+  function defaultTaskState() {
+    return DAILY_TASKS.map(t => ({ id: uid(), text: t.tarea, proceso: t.proceso, status: null, by: null }));
+  }
+
+  async function loadDay() {
+    setStatus('Cargando...');
+    try {
+      const url = APPS_SCRIPT_URL + '?action=getDay&fecha=' + encodeURIComponent(datePicker.value) + '&_=' + Date.now();
+      const res = await fetch(url, { cache: 'no-store' });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      if (json.found) {
+        state = { tasks: json.tasks || [], activities: json.activities || [], inventory: json.inventory || [] };
+        const { migrated, changed } = migrateTasks(state.tasks);
+        state.tasks = migrated;
+        if (json.turno) setTurno(json.turno);
+        if (json.localName) { localName.value = json.localName; sizeTitleInput(); }
+        if (changed) scheduleSave();
+      } else {
+        state = { tasks: defaultTaskState(), activities: [], inventory: [] };
+        scheduleSave();
+      }
+      setStatus('Sincronizado con Sheets');
+    } catch (e) {
+      state = { tasks: defaultTaskState(), activities: [], inventory: [] };
+      setStatus('Sin conexión con Sheets — verificá tu internet');
+    }
+    evFecha.value = datePicker.value;
+    render();
+  }
+
+  function scheduleSave() {
+    setStatus('Guardando...');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveDay, 500);
+  }
+
+  async function saveDay() {
+    try {
+      const payload = {
+        action: 'saveDay',
+        fecha: datePicker.value,
+        tasks: state.tasks,
+        activities: state.activities,
+        inventory: state.inventory,
+        turno,
+        localName: localName.value
+      };
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (!json || json.error) throw new Error(json && json.error);
+      setStatus('Sincronizado con Sheets');
+    } catch (e) {
+      setStatus('Error al guardar, reintentando...');
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveDay, 2000);
+    }
+  }
+
+  function setTurno(v) {
+    turno = v;
+    [...turnoSeg.children].forEach(b => b.classList.toggle('active', b.dataset.v === v));
+  }
+  turnoSeg.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+    setTurno(e.target.dataset.v);
+    scheduleSave();
+  });
+
+  tipoSeg.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+    tipoActividad = e.target.dataset.v;
+    [...tipoSeg.children].forEach(b => b.classList.toggle('active', b.dataset.v === tipoActividad));
+  });
+
+  function render() {
+    renderTasks();
+    renderActivities();
+    renderInventory();
+  }
+
+  const RING_CIRC = 2 * Math.PI * 16;
+
+  let editingTaskId = null;
+
+  function renderTasks() {
+    const wrap = $('taskList');
+    wrap.innerHTML = '';
+    const done = state.tasks.filter(t => t.status === 'done').length;
+    const total = state.tasks.length;
+    $('ringLabel').textContent = done + '/' + total;
+    const ringFg = $('ringFg');
+    ringFg.style.strokeDasharray = RING_CIRC;
+    const pct = total > 0 ? done / total : 0;
+    ringFg.style.strokeDashoffset = RING_CIRC * (1 - pct);
+
+    if (state.tasks.length === 0) { wrap.innerHTML = '<div class="empty">Sin tareas cargadas todavía.</div>'; return; }
+
+    state.tasks.forEach(t => {
+      const row = document.createElement('div');
+
+      if (t.id === editingTaskId) {
+        row.className = 'mes-item';
+        const input = document.createElement('input');
+        input.type = 'text'; input.className = 'edit-input'; input.setAttribute('data-id', t.id); input.maxLength = 140;
+        input.value = t.text;
+        row.appendChild(input);
+        const actions = document.createElement('div'); actions.className = 'task-actions'; actions.style.marginTop = '8px';
+        const saveBtn = document.createElement('button'); saveBtn.className = 'btn-edit'; saveBtn.setAttribute('data-id', t.id); saveBtn.setAttribute('data-action', 'save'); saveBtn.textContent = '✓';
+        const cancelBtn = document.createElement('button'); cancelBtn.className = 'del'; cancelBtn.setAttribute('data-id', t.id); cancelBtn.setAttribute('data-action', 'cancel'); cancelBtn.textContent = '×';
+        actions.appendChild(saveBtn); actions.appendChild(cancelBtn);
+        row.appendChild(actions);
+        wrap.appendChild(row);
+        setTimeout(() => { input.focus(); input.select(); }, 0);
+        return;
+      }
+
+      row.className = 'mes-item task-row' + (t.status === 'done' ? ' row-done' : t.status === 'notdone' ? ' row-notdone' : '');
+
+      const top = document.createElement('div'); top.style.display = 'flex'; top.style.alignItems = 'flex-start'; top.style.gap = '10px';
+
+      const body = document.createElement('div'); body.style.flex = '1'; body.style.minWidth = '0';
+      const txt = document.createElement('div'); txt.className = 'txt editable'; txt.setAttribute('data-id', t.id);
+      txt.textContent = t.text;
+      body.appendChild(txt);
+      if (t.proceso) { const per = document.createElement('span'); per.className = 'mes-periodo'; per.style.marginTop = '5px'; per.style.display = 'inline-block'; per.textContent = t.proceso; body.appendChild(per); }
+      if (t.by) { const by = document.createElement('div'); by.className = 'by-tag'; by.style.marginTop = '4px'; by.textContent = '— ' + t.by; body.appendChild(by); }
+      top.appendChild(body);
+
+      const actions = document.createElement('div'); actions.className = 'task-actions';
+      const chkBtn = document.createElement('button');
+      chkBtn.className = 'btn-check' + (t.status === 'done' ? ' active' : '');
+      chkBtn.textContent = '✓'; chkBtn.setAttribute('data-id', t.id); chkBtn.setAttribute('data-action', 'done'); chkBtn.setAttribute('aria-label', 'Marcar hecha');
+      const xBtn = document.createElement('button');
+      xBtn.className = 'btn-x' + (t.status === 'notdone' ? ' active' : '');
+      xBtn.textContent = '✗'; xBtn.setAttribute('data-id', t.id); xBtn.setAttribute('data-action', 'notdone'); xBtn.setAttribute('aria-label', 'Marcar no hecha');
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn-edit'; editBtn.textContent = '✎';
+      editBtn.setAttribute('data-id', t.id); editBtn.setAttribute('data-action', 'edit'); editBtn.setAttribute('aria-label', 'Editar tarea');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'del'; delBtn.textContent = '×';
+      delBtn.setAttribute('data-id', t.id); delBtn.setAttribute('aria-label', 'Eliminar');
+      actions.appendChild(chkBtn); actions.appendChild(xBtn); actions.appendChild(editBtn); actions.appendChild(delBtn);
+      top.appendChild(actions);
+
+      row.appendChild(top);
+      wrap.appendChild(row);
+    });
+  }
+
+  function saveTaskEdit(id, newText) {
+    const t = state.tasks.find(x => x.id === id);
+    if (t && newText.trim()) {
+      t.text = newText.trim();
+      scheduleSave();
+    }
+    editingTaskId = null;
+    render();
+  }
+
+  function fmtDMY(dateStr) { const [y,m,d] = dateStr.split('-'); return d + '/' + m + '/' + y; }
+
+  function renderActivities() {
+    const list = $('actList');
+    list.innerHTML = '';
+    const normales = state.activities.filter(a => a.type !== 'evento');
+    $('actCount').textContent = normales.length;
+    if (normales.length === 0) { list.innerHTML = '<li class="empty">Sin actividades registradas todavía.</li>'; return; }
+    const sorted = [...normales].sort((a,b) => a.time.localeCompare(b.time));
+    sorted.forEach(a => {
+      const li = document.createElement('li');
+      li.className = 'activity-item';
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const tb = document.createElement('div'); tb.className = 'time-badge';
+      tb.textContent = a.time + (a.by ? ' · ' + a.by : '');
+      if (a.type === 'importante') { const t = document.createElement('span'); t.className = 'tag importante'; t.textContent = 'Importante'; tb.appendChild(t); }
+      const delBtn = document.createElement('button'); delBtn.className = 'del'; delBtn.setAttribute('data-id', a.id); delBtn.textContent = '×';
+      meta.appendChild(tb); meta.appendChild(delBtn); li.appendChild(meta);
+
+      const txt = document.createElement('div'); txt.className = 'txt'; txt.textContent = a.text; li.appendChild(txt);
+
+      if (a.link || a.archivoUrl) {
+        const actions = document.createElement('div'); actions.className = 'event-actions';
+        if (a.link) { const lk = document.createElement('a'); lk.href = a.link; lk.target = '_blank'; lk.rel = 'noopener noreferrer'; lk.textContent = 'Abrir enlace'; actions.appendChild(lk); }
+        if (a.archivoUrl) { const fl = document.createElement('a'); fl.href = a.archivoUrl; fl.target = '_blank'; fl.rel = 'noopener noreferrer'; fl.textContent = 'Ver archivo'; actions.appendChild(fl); }
+        li.appendChild(actions);
+      }
+      list.appendChild(li);
+    });
+  }
+
+  /* ---------- Eventos: registro independiente, visible en cualquier fecha hasta finalizar ---------- */
+
+  let eventosList = [];
+
+  function gcalLinkEvento(ev) {
+    const [y,m,d] = ev.eventDate.split('-').map(Number);
+    const [h,min] = (ev.eventTime || '00:00').split(':').map(Number);
+    const start = new Date(y, m-1, d, h, min);
+    const end = new Date(start.getTime() + 60*60*1000);
+    const fmt = (dt) => dt.getFullYear() + pad2(dt.getMonth()+1) + pad2(dt.getDate()) + 'T' + pad2(dt.getHours()) + pad2(dt.getMinutes()) + '00';
+    let details = ev.text || '';
+    if (ev.by) details += '\nRegistrado por ' + ev.by;
+    if (ev.link) details += (details ? '\n\n' : '') + ev.link;
+    const params = new URLSearchParams({ action: 'TEMPLATE', text: ev.text || 'Evento', dates: fmt(start) + '/' + fmt(end), details });
+    return 'https://calendar.google.com/calendar/render?' + params.toString();
+  }
+
+  async function loadEventos() {
+    try {
+      const url = APPS_SCRIPT_URL + '?action=getEventos&_=' + Date.now();
+      const res = await fetch(url, { cache: 'no-store' });
+      const json = await res.json();
+      eventosList = json.rows || [];
+    } catch (e) {
+      eventosList = [];
+    }
+    renderEvents();
+  }
+
+  function renderEvents() {
+    const list = $('eventList');
+    list.innerHTML = '';
+    $('eventCount').textContent = eventosList.length;
+    if (eventosList.length === 0) { list.innerHTML = '<li class="empty">Sin eventos programados todavía.</li>'; return; }
+    const sorted = [...eventosList].sort((a,b) => (a.eventDate + (a.eventTime||'')).localeCompare(b.eventDate + (b.eventTime||'')));
+    sorted.forEach(ev => {
+      const li = document.createElement('li');
+      li.className = 'activity-item' + (ev.finalizado ? ' status-done' : '');
+
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const tb = document.createElement('div'); tb.className = 'time-badge';
+      tb.textContent = fmtDMY(ev.eventDate) + (ev.eventTime ? ' · ' + ev.eventTime : '');
+      const tag = document.createElement('span'); tag.className = 'tag evento'; tag.textContent = ev.finalizado ? 'Finalizado' : 'Evento'; tb.appendChild(tag);
+      const delBtn = document.createElement('button'); delBtn.className = 'del'; delBtn.setAttribute('data-id', ev.id); delBtn.setAttribute('data-action', 'delete'); delBtn.textContent = '×';
+      meta.appendChild(tb); meta.appendChild(delBtn); li.appendChild(meta);
+
+      const txt = document.createElement('div'); txt.className = 'txt'; txt.textContent = ev.text;
+      if (ev.finalizado) txt.style.textDecoration = 'line-through';
+      li.appendChild(txt);
+
+      if (ev.by) { const by = document.createElement('div'); by.className = 'by-tag'; by.textContent = '— ' + ev.by; li.appendChild(by); }
+
+      const actions = document.createElement('div'); actions.className = 'event-actions';
+      const finBtn = document.createElement('button');
+      finBtn.className = 'chip' + (ev.finalizado ? ' active-green' : '');
+      finBtn.textContent = (ev.finalizado ? '✓ ' : '') + 'Finalizado';
+      finBtn.setAttribute('data-id', ev.id); finBtn.setAttribute('data-action', 'toggle-fin');
+      actions.appendChild(finBtn);
+      const gcal = document.createElement('a'); gcal.className = 'gcal'; gcal.href = gcalLinkEvento(ev); gcal.target = '_blank'; gcal.rel = 'noopener noreferrer';
+      gcal.textContent = 'Agregar a Google Calendar'; actions.appendChild(gcal);
+      if (ev.link) { const lk = document.createElement('a'); lk.href = ev.link; lk.target = '_blank'; lk.rel = 'noopener noreferrer'; lk.textContent = 'Abrir enlace'; actions.appendChild(lk); }
+      if (ev.archivoUrl) { const fl = document.createElement('a'); fl.href = ev.archivoUrl; fl.target = '_blank'; fl.rel = 'noopener noreferrer'; fl.textContent = 'Ver archivo'; actions.appendChild(fl); }
+      li.appendChild(actions);
+
+      list.appendChild(li);
+    });
+  }
+
+  function renderInventory() {
+    const wrap = $('invTable');
+    wrap.innerHTML = '';
+    $('invCount').textContent = state.inventory.length;
+    const actionsWrap = $('invActions');
+    actionsWrap.innerHTML = '';
+    if (state.inventory.length === 0) {
+      wrap.innerHTML = '<div class="empty">Sin ajustes cargados todavía.</div>';
+      return;
+    }
+    state.inventory.forEach(item => {
+      const row = document.createElement('div');
+      const dateTxt = item.date ? fmtDMY(item.date) : '';
+      if (item.type === 'solicitud') {
+        row.className = 'inv-row solicitud';
+        const badge = document.createElement('div'); badge.className = 'inv-solicitud-badge';
+        badge.innerHTML = '<span class="tag-erp">Solicitud ERP</span>';
+        const num = document.createElement('span'); num.textContent = 'N° ' + item.solicitud;
+        badge.appendChild(num);
+        const date = document.createElement('div'); date.className = 'inv-date'; date.textContent = dateTxt;
+        const del = document.createElement('button'); del.className = 'del'; del.setAttribute('data-id', item.id); del.textContent = '×';
+        row.appendChild(badge); row.appendChild(date); row.appendChild(del);
+        wrap.appendChild(row);
+        return;
+      }
+      row.className = 'inv-row';
+      const sku = document.createElement('div'); sku.className = 'inv-sku'; sku.textContent = item.sku;
+      const desc = document.createElement('div'); desc.className = 'inv-desc'; desc.textContent = item.desc;
+      const qty = document.createElement('div'); qty.className = 'inv-qty ' + (item.qty < 0 ? 'neg' : item.qty > 0 ? 'pos' : '');
+      qty.textContent = (item.qty > 0 ? '+' : '') + item.qty;
+      const date = document.createElement('div'); date.className = 'inv-date'; date.textContent = dateTxt;
+      const del = document.createElement('button'); del.className = 'del'; del.setAttribute('data-id', item.id); del.textContent = '×';
+      row.appendChild(sku); row.appendChild(desc); row.appendChild(qty); row.appendChild(date); row.appendChild(del);
+      wrap.appendChild(row);
+    });
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'add-btn secondary small';
+    copyBtn.textContent = 'Copiar tabla';
+    copyBtn.addEventListener('click', copyInventory);
+    actionsWrap.appendChild(copyBtn);
+  }
+
+  function copyInventory() {
+    const dateOrDash = (d) => d ? fmtDMY(d) : '—';
+    const lines = state.inventory.map(i => i.type === 'solicitud'
+      ? [dateOrDash(i.date), 'Solicitud ERP', 'N° ' + i.solicitud, ''].join('\t')
+      : [dateOrDash(i.date), i.sku, i.desc, i.qty].join('\t'));
+    const text = 'Fecha\tSKU\tDescripción\tCantidad ajustada\n' + lines.join('\n');
+    const done = () => showToast('Tabla copiada');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+  function fallbackCopy(text, cb) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); cb(); } catch (e) { showToast('No se pudo copiar'); }
+    document.body.removeChild(ta);
+  }
+
+  function addTask() {
+    if (!requirePersona()) return;
+    const input = $('taskInput');
+    const val = input.value.trim();
+    if (!val) return;
+    state.tasks.push({ id: uid(), text: val, proceso: '', status: null, by: currentPersona() });
+    input.value = '';
+    render(); scheduleSave(); input.focus();
+  }
+
+  async function uploadArchivoIfAny(file) {
+    if (!file) return null;
+    const { base64, mime } = await readFileAsBase64(file);
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'uploadArchivo', archivoNombre: file.name, archivoMime: mime, archivoBase64: base64 })
+    });
+    const json = await res.json();
+    if (!json || json.error) throw new Error(json && json.error);
+    return { url: json.url, nombre: file.name };
+  }
+
+  async function addActivity() {
+    if (!requirePersona()) return;
+    const input = $('actInput');
+    const val = input.value.trim();
+    if (!val) return;
+    const time = actTime.value || nowHM();
+    const entry = { id: uid(), text: val, time, type: tipoActividad, by: currentPersona() };
+    const fileInput = $('actArchivo');
+    const file = fileInput.files[0];
+    const btn = $('actAddBtn');
+    if (file) {
+      btn.disabled = true; btn.textContent = 'Subiendo archivo...';
+      try {
+        const up = await uploadArchivoIfAny(file);
+        entry.archivoUrl = up.url; entry.archivoNombre = up.nombre;
+      } catch (e) {
+        showToast('No se pudo subir el archivo, se registró la actividad sin él');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Registrar actividad';
+      }
+    }
+    state.activities.push(entry);
+    input.value = ''; actTime.value = nowHM(); fileInput.value = '';
+    render(); scheduleSave(); input.focus();
+  }
+
+  async function addEvento() {
+    if (!requirePersona()) return;
+    const input = $('evInput');
+    const val = input.value.trim();
+    if (!val) return;
+    if (!evFecha.value || !evHora.value) { showToast('Completá fecha y hora del evento'); return; }
+    const payload = {
+      action: 'saveEvento', text: val, eventDate: evFecha.value, eventTime: evHora.value,
+      link: evLink.value.trim(), localName: localName.value, by: currentPersona(), finalizado: false
+    };
+    const fileInput = $('evArchivo');
+    const file = fileInput.files[0];
+    const btn = $('evAddBtn');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    try {
+      if (file) {
+        const { base64, mime } = await readFileAsBase64(file);
+        payload.archivoBase64 = base64; payload.archivoMime = mime; payload.archivoNombre = file.name;
+      }
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (!json || json.error) throw new Error(json && json.error);
+      showToast('Evento registrado');
+      input.value = ''; evLink.value = ''; evFecha.value = datePicker.value; evHora.value = ''; fileInput.value = '';
+      await loadEventos();
+    } catch (e) {
+      showToast('No se pudo registrar el evento');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Registrar evento';
+    }
+  }
+
+  async function toggleEventoFinalizado(id) {
+    const ev = eventosList.find(x => x.id === id);
+    if (!ev) return;
+    ev.finalizado = !ev.finalizado;
+    renderEvents();
+    try {
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'saveEvento', id: ev.id, text: ev.text, eventDate: ev.eventDate, eventTime: ev.eventTime,
+          link: ev.link, archivoNombre: ev.archivoNombre, archivoUrl: ev.archivoUrl,
+          localName: localName.value, by: currentPersona() || ev.by, finalizado: ev.finalizado
+        })
+      });
+      const json = await res.json();
+      if (!json || json.error) throw new Error(json && json.error);
+    } catch (e) {
+      showToast('No se pudo actualizar en Sheets');
+    }
+  }
+
+  async function deleteEventoItem(id) {
+    eventosList = eventosList.filter(x => x.id !== id);
+    renderEvents();
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'deleteEvento', id })
+      });
+    } catch (e) {
+      showToast('No se pudo eliminar en Sheets');
+    }
+  }
+
+  function addInventory() {
+    if (!requirePersona()) return;
+    const sku = $('invSku').value.trim();
+    const desc = $('invDesc').value.trim();
+    const qtyRaw = $('invQty').value.trim();
+    if (!sku && !desc) { showToast('Ingresá al menos SKU o descripción'); return; }
+    const qty = qtyRaw === '' ? 0 : Number(qtyRaw);
+    state.inventory.push({ id: uid(), sku: sku || '—', desc: desc || '—', qty: isNaN(qty) ? 0 : qty, date: datePicker.value, by: currentPersona() });
+    $('invSku').value = ''; $('invDesc').value = ''; $('invQty').value = '';
+    render(); scheduleSave(); $('invSku').focus();
+  }
+
+  function addSolicitud() {
+    if (!requirePersona()) return;
+    const val = $('invSolicitud').value.trim();
+    if (!val) { showToast('Ingresá el N° de solicitud'); return; }
+    state.inventory.push({ id: uid(), type: 'solicitud', solicitud: val, date: datePicker.value, by: currentPersona() });
+    $('invSolicitud').value = '';
+    render(); scheduleSave();
+  }
+
+  function parsePasted(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    let added = 0;
+    lines.forEach(line => {
+      let parts = line.includes('\t') ? line.split('\t') : line.split(',');
+      parts = parts.map(p => p.trim());
+      if (parts.length < 2) return;
+      const sku = parts[0] || '—';
+      const desc = parts[1] || '—';
+      const qtyRaw = parts[2] !== undefined ? parts[2].replace(/[^\-0-9.]/g, '') : '0';
+      const qty = qtyRaw === '' ? 0 : Number(qtyRaw);
+      if (sku.toLowerCase() === 'sku' && desc.toLowerCase().includes('descrip')) return;
+      state.inventory.push({ id: uid(), sku, desc, qty: isNaN(qty) ? 0 : qty, date: datePicker.value, by: currentPersona() });
+      added++;
+    });
+    return added;
+  }
+
+  $('taskAddBtn').addEventListener('click', addTask);
+  $('taskInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') addTask(); });
+  $('actAddBtn').addEventListener('click', addActivity);
+  $('actInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') addActivity(); });
+  $('evAddBtn').addEventListener('click', addEvento);
+  $('invAddBtn').addEventListener('click', addInventory);
+  $('invQty').addEventListener('keydown', (e) => { if (e.key === 'Enter') addInventory(); });
+
+  $('taskList').addEventListener('click', (e) => {
+    const id = e.target.getAttribute('data-id'); if (!id) return;
+    const action = e.target.getAttribute('data-action');
+
+    if (e.target.classList.contains('txt') && e.target.classList.contains('editable')) {
+      editingTaskId = id;
+      render();
+      return;
+    }
+    if (action === 'edit') {
+      editingTaskId = id;
+      render();
+      return;
+    }
+    if (action === 'save') {
+      const input = $('taskList').querySelector('.edit-input[data-id="' + id + '"]');
+      saveTaskEdit(id, input ? input.value : '');
+      return;
+    }
+    if (action === 'cancel') {
+      editingTaskId = null;
+      render();
+      return;
+    }
+    if (action === 'done' || action === 'notdone') {
+      if (!requirePersona()) return;
+      const t = state.tasks.find(x => x.id === id);
+      if (t) {
+        t.status = t.status === action ? null : action;
+        if (t.status) t.by = currentPersona();
+      }
+      render(); scheduleSave();
+      return;
+    }
+    if (e.target.classList.contains('del')) {
+      state.tasks = state.tasks.filter(x => x.id !== id); render(); scheduleSave();
+    }
+  });
+
+  $('taskList').addEventListener('keydown', (e) => {
+    if (!e.target.classList.contains('edit-input')) return;
+    const id = e.target.getAttribute('data-id');
+    if (e.key === 'Enter') { saveTaskEdit(id, e.target.value); }
+    else if (e.key === 'Escape') { editingTaskId = null; render(); }
+  });
+  $('actList').addEventListener('click', (e) => {
+    const id = e.target.getAttribute('data-id'); if (!id) return;
+    if (e.target.classList.contains('del')) { state.activities = state.activities.filter(x => x.id !== id); render(); scheduleSave(); }
+  });
+  $('eventList').addEventListener('click', (e) => {
+    const id = e.target.getAttribute('data-id'); if (!id) return;
+    const action = e.target.getAttribute('data-action');
+    if (action === 'toggle-fin') { toggleEventoFinalizado(id); return; }
+    if (action === 'delete' || e.target.classList.contains('del')) { deleteEventoItem(id); }
+  });
+  $('invTable').addEventListener('click', (e) => {
+    const id = e.target.getAttribute('data-id'); if (!id) return;
+    if (e.target.classList.contains('del')) { state.inventory = state.inventory.filter(x => x.id !== id); render(); scheduleSave(); }
+  });
+
+  $('pasteToggle').addEventListener('click', () => {
+    const box = $('pasteBox');
+    const open = box.classList.toggle('open');
+    $('pasteToggle').textContent = open ? 'Pegar varias filas desde Excel ▴' : 'Pegar varias filas desde Excel ▾';
+  });
+  $('pasteImportBtn').addEventListener('click', () => {
+    if (!requirePersona()) return;
+    const area = $('pasteArea');
+    const added = parsePasted(area.value);
+    if (added > 0) { area.value = ''; render(); scheduleSave(); showToast(added + ' fila(s) importadas'); }
+    else { showToast('No se detectaron filas válidas'); }
+  });
+
+  $('solicitudToggle').addEventListener('click', () => {
+    const box = $('solicitudBox');
+    const open = box.classList.toggle('open');
+    $('solicitudToggle').textContent = open ? 'Ingresar número de solicitud ▴' : 'Ingresar número de solicitud ▾';
+  });
+  $('solicitudAddBtn').addEventListener('click', addSolicitud);
+  $('invSolicitud').addEventListener('keydown', (e) => { if (e.key === 'Enter') addSolicitud(); });
+
+  const titleMirror = $('titleMirror');
+  function sizeTitleInput() {
+    titleMirror.textContent = localName.value || 'Local';
+    localName.style.width = (titleMirror.offsetWidth + 14) + 'px';
+  }
+  localName.addEventListener('input', sizeTitleInput);
+  localName.addEventListener('change', scheduleSave);
+  sizeTitleInput();
+  personaInput.addEventListener('input', () => { updateAvatar(); syncPersonaChips(); });
+  datePicker.addEventListener('change', loadDay);
+
+  /* ---------- Chips rápidos de encargado de turno ---------- */
+
+  const qfTurnoRow = $('qfTurnoRow');
+  const qfTurnoInput = $('qfTurnoInput');
+  const qfTurnoChip = $('qfTurnoChip');
+
+  function syncPersonaChips() {
+    const current = currentPersona();
+    document.querySelectorAll('.persona-chip[data-name]').forEach(chip => {
+      chip.classList.toggle('active', chip.getAttribute('data-name') === current);
+    });
+    const isQf = current && current !== 'Vania' && current !== 'Meylin' && qfTurnoChip.dataset.usedName === current;
+    qfTurnoChip.classList.toggle('active', !!isQf);
+    qfTurnoChip.textContent = isQf ? 'QF Turno: ' + current : 'QF Turno';
+  }
+
+  $('personaChips').addEventListener('click', (e) => {
+    const btn = e.target.closest('.persona-chip');
+    if (!btn) return;
+    if (btn.dataset.role === 'qf') {
+      const open = qfTurnoRow.style.display !== 'none';
+      qfTurnoRow.style.display = open ? 'none' : 'block';
+      if (!open) { qfTurnoInput.value = ''; qfTurnoInput.focus(); }
+      return;
+    }
+    const name = btn.getAttribute('data-name');
+    personaInput.value = name;
+    updateAvatar();
+    syncPersonaChips();
+  });
+
+  function confirmQfTurno() {
+    const name = qfTurnoInput.value.trim();
+    if (!name) { showToast('Ingresá el nombre del QF de turno'); return; }
+    personaInput.value = name;
+    qfTurnoChip.dataset.usedName = name;
+    updateAvatar();
+    syncPersonaChips();
+    qfTurnoRow.style.display = 'none';
+  }
+  $('qfTurnoConfirm').addEventListener('click', confirmQfTurno);
+  qfTurnoInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmQfTurno(); });
+
+  /* ---------- Publicidad / Marca Precios (registro genérico con vencimiento) ---------- */
+
+  function diasHasta(fechaStr) {
+    if (!fechaStr) return null;
+    const [y, m, d] = fechaStr.split('-').map(Number);
+    const target = new Date(y, m - 1, d);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return Math.round((target - today) / 86400000);
+  }
+
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        const comma = result.indexOf(',');
+        resolve({ base64: result.slice(comma + 1), mime: file.type || 'application/octet-stream' });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Habilita, sobre la zona que envuelve un <input type="file">, poder soltar
+  // un archivo arrastrado o pegar (Ctrl+V) una captura de pantalla copiada.
+  function setupFileDrop(zoneId, inputId) {
+    const zone = $(zoneId);
+    const input = $(inputId);
+    if (!zone || !input) return;
+
+    const flash = () => {
+      zone.classList.add('pasted');
+      setTimeout(() => zone.classList.remove('pasted'), 900);
+    };
+    const assignFiles = (files) => {
+      if (!files || !files.length) return;
+      input.files = files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      flash();
+    };
+
+    zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        assignFiles(e.dataTransfer.files);
+      }
+    });
+
+    zone.addEventListener('paste', (e) => {
+      const items = (e.clipboardData || window.clipboardData) ? (e.clipboardData || window.clipboardData).items : null;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            const dt = new DataTransfer();
+            const stamped = new File([file], 'captura-' + Date.now() + '.png', { type: file.type });
+            dt.items.add(stamped);
+            assignFiles(dt.files);
+          }
+          e.preventDefault();
+          break;
+        }
+      }
+    });
+  }
+
+  // cfg: { prefix: 'ad', action: 'Publicidad', label: 'publicidad', addLabel: 'Registrar publicidad' }
+  function setupRegistroVencimiento(cfg) {
+    let items = [];
+    const els = {
+      nombre: $(cfg.prefix + 'Nombre'),
+      fImpl: $(cfg.prefix + 'FechaImpl'),
+      fRetiro: $(cfg.prefix + 'FechaRetiro'),
+      archivo: $(cfg.prefix + 'Archivo'),
+      addBtn: $(cfg.prefix + 'AddBtn'),
+      list: $(cfg.prefix + 'List'),
+      count: $(cfg.prefix + 'Count')
+    };
+
+    function gcalLink(item) {
+      const [y, m, d] = item.fechaRetiro.split('-').map(Number);
+      const start = new Date(y, m - 1, d);
+      const end = new Date(y, m - 1, d + 1);
+      const fmt = (dt) => dt.getFullYear() + pad2(dt.getMonth() + 1) + pad2(dt.getDate());
+      let details = 'Retiro de ' + cfg.label + ': ' + item.nombre;
+      if (item.archivoUrl) details += '\n' + item.archivoUrl;
+      const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: 'Vence ' + cfg.label + ': ' + item.nombre,
+        dates: fmt(start) + '/' + fmt(end),
+        details
+      });
+      return 'https://calendar.google.com/calendar/render?' + params.toString();
+    }
+
+    async function load() {
+      try {
+        const url = APPS_SCRIPT_URL + '?action=get' + cfg.action + '&_=' + Date.now();
+        const res = await fetch(url, { cache: 'no-store' });
+        const json = await res.json();
+        items = json.rows || [];
+      } catch (e) {
+        items = [];
+      }
+      render();
+    }
+
+    function render() {
+      els.list.innerHTML = '';
+      els.count.textContent = items.length;
+      if (items.length === 0) { els.list.innerHTML = '<li class="empty">Sin ' + cfg.label + ' registrada todavía.</li>'; return; }
+      const sorted = [...items].sort((a, b) => (a.fechaRetiro || '').localeCompare(b.fechaRetiro || ''));
+      sorted.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'ad-item';
+
+        const head = document.createElement('div'); head.className = 'ad-head';
+        const name = document.createElement('div'); name.className = 'ad-name'; name.textContent = item.nombre;
+        head.appendChild(name);
+
+        const dias = diasHasta(item.fechaRetiro);
+        if (!item.retirado && dias !== null) {
+          let badgeTxt = '', badgeCls = '';
+          if (dias < 0) { badgeTxt = 'Vencida'; badgeCls = 'urgent'; }
+          else if (dias === 0) { badgeTxt = 'Vence hoy'; badgeCls = 'urgent'; }
+          else if (dias === 1) { badgeTxt = 'Vence mañana'; badgeCls = 'warn'; }
+          if (badgeTxt) {
+            const badge = document.createElement('span'); badge.className = 'ad-badge ' + badgeCls; badge.textContent = badgeTxt;
+            head.appendChild(badge);
+          }
+        }
+        li.appendChild(head);
+
+        const dates = document.createElement('div'); dates.className = 'ad-dates';
+        dates.textContent = 'Implementación: ' + fmtDMY(item.fechaImplementacion) + ' · Retiro: ' + fmtDMY(item.fechaRetiro);
+        li.appendChild(dates);
+
+        if (item.by) {
+          const by = document.createElement('div'); by.className = 'ad-by'; by.textContent = 'Registrado por ' + item.by;
+          li.appendChild(by);
+        }
+
+        const statusRow = document.createElement('div'); statusRow.className = 'ad-status-row';
+        const chipImpl = document.createElement('button');
+        chipImpl.className = 'chip' + (item.implementado ? ' active-green' : '');
+        chipImpl.textContent = (item.implementado ? '✓ ' : '') + 'Implementada';
+        chipImpl.setAttribute('data-id', item.id); chipImpl.setAttribute('data-field', 'implementado');
+        const chipRet = document.createElement('button');
+        chipRet.className = 'chip' + (item.retirado ? ' active-red' : '');
+        chipRet.textContent = (item.retirado ? '✓ ' : '') + 'Retirada';
+        chipRet.setAttribute('data-id', item.id); chipRet.setAttribute('data-field', 'retirado');
+        statusRow.appendChild(chipImpl); statusRow.appendChild(chipRet);
+        li.appendChild(statusRow);
+
+        const actions = document.createElement('div'); actions.className = 'event-actions';
+        if (item.archivoUrl) {
+          const fileLink = document.createElement('a');
+          fileLink.href = item.archivoUrl; fileLink.target = '_blank'; fileLink.rel = 'noopener noreferrer';
+          fileLink.textContent = 'Ver archivo';
+          actions.appendChild(fileLink);
+        }
+        const gcal = document.createElement('a');
+        gcal.className = 'gcal'; gcal.href = gcalLink(item); gcal.target = '_blank'; gcal.rel = 'noopener noreferrer';
+        gcal.textContent = 'Agregar alerta a Calendar';
+        actions.appendChild(gcal);
+        const del = document.createElement('button');
+        del.className = 'del'; del.setAttribute('data-id', item.id); del.setAttribute('data-action', 'delete-item');
+        del.textContent = '×';
+        actions.appendChild(del);
+        li.appendChild(actions);
+
+        els.list.appendChild(li);
+      });
+    }
+
+    async function add() {
+      if (!requirePersona()) return;
+      const nombre = els.nombre.value.trim();
+      const fImpl = els.fImpl.value;
+      const fRetiro = els.fRetiro.value;
+      if (!nombre || !fImpl || !fRetiro) { showToast('Completá nombre y ambas fechas'); return; }
+      const file = els.archivo.files[0];
+      const payload = {
+        action: 'save' + cfg.action,
+        nombre, fechaImplementacion: fImpl, fechaRetiro: fRetiro,
+        implementado: false, retirado: false,
+        localName: localName.value, by: currentPersona()
+      };
+      els.addBtn.disabled = true; els.addBtn.textContent = 'Guardando...';
+      try {
+        if (file) {
+          const { base64, mime } = await readFileAsBase64(file);
+          payload.archivoBase64 = base64;
+          payload.archivoMime = mime;
+          payload.archivoNombre = file.name;
+        }
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (!json || json.error) throw new Error(json && json.error);
+        showToast(cfg.label.charAt(0).toUpperCase() + cfg.label.slice(1) + ' registrada');
+        els.nombre.value = ''; els.fImpl.value = ''; els.fRetiro.value = ''; els.archivo.value = '';
+        await load();
+      } catch (e) {
+        showToast('Error al guardar ' + cfg.label);
+      } finally {
+        els.addBtn.disabled = false; els.addBtn.textContent = cfg.addLabel;
+      }
+    }
+
+    async function toggle(id, field) {
+      const item = items.find(x => x.id === id);
+      if (!item) return;
+      item[field] = !item[field];
+      render();
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'save' + cfg.action, id: item.id, nombre: item.nombre,
+            fechaImplementacion: item.fechaImplementacion, fechaRetiro: item.fechaRetiro,
+            implementado: item.implementado, retirado: item.retirado,
+            archivoNombre: item.archivoNombre, archivoUrl: item.archivoUrl,
+            localName: localName.value, by: currentPersona() || item.by
+          })
+        });
+        const json = await res.json();
+        if (!json || json.error) throw new Error(json && json.error);
+      } catch (e) {
+        showToast('No se pudo actualizar en Sheets');
+      }
+    }
+
+    async function remove(id) {
+      items = items.filter(x => x.id !== id);
+      render();
+      try {
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'delete' + cfg.action, id })
+        });
+      } catch (e) {
+        showToast('No se pudo eliminar en Sheets');
+      }
+    }
+
+    els.addBtn.addEventListener('click', add);
+    els.list.addEventListener('click', (e) => {
+      const id = e.target.getAttribute('data-id'); if (!id) return;
+      const field = e.target.getAttribute('data-field');
+      if (field) { toggle(id, field); return; }
+      if (e.target.getAttribute('data-action') === 'delete-item') { remove(id); }
+    });
+
+    load();
+  }
+
+  setupRegistroVencimiento({ prefix: 'ad', action: 'Publicidad', label: 'publicidad', addLabel: 'Registrar publicidad' });
+  setupRegistroVencimiento({ prefix: 'mp', action: 'MarcaPrecios', label: 'marca precios', addLabel: 'Registrar marca precios' });
+
+  /* ---------- Tareas mensuales ---------- */
+
+  const MONTHLY_TASKS = [
+    { area: 'Sanitario', tarea: 'Planillas Temperatura Mensual', proceso: '', periodicidad: 'Primer día del mes' },
+    { area: 'Sanitario', tarea: 'Impresión y archivo en carpeta correspondiente de Dossier Petitorio Mínimo', proceso: 'Carpeta cumplimiento sanitario – Enviado por Operaciones retail', periodicidad: 'Primer día del mes' },
+    { area: 'Sanitario', tarea: 'Listado de Precios Mensual', proceso: 'Carpeta precios – Enviado por Operaciones retail', periodicidad: 'Primer día del mes' },
+    { area: 'Sanitario', tarea: 'Listado Bioequivalente Mensual', proceso: 'Carpeta Bioequivalente - Enviado por Operaciones retail', periodicidad: 'Primer día del mes' },
+    { area: 'Sanitario', tarea: 'Enviar Nómina GD ISP Mensual', proceso: '', periodicidad: '1 – 10 de cada mes' },
+    { area: 'Sanitario', tarea: 'Enviar Nómina RCH ISP Mensual', proceso: '', periodicidad: '1 – 10 de cada mes' },
+    { area: 'Sanitario', tarea: 'Takary Check list Sanitario Mensual', proceso: 'TAKARY', periodicidad: '1 – 10 de cada mes' },
+    { area: 'Adquisiciones', tarea: 'Pedido Adquisiciones Estándar', proceso: 'ERP', periodicidad: '1 – 8 de cada mes' },
+    { area: 'Adquisiciones', tarea: 'Pedido Adquisiciones Especial', proceso: 'ERP', periodicidad: '1 – 8 de cada mes' },
+    { area: 'Tesorería', tarea: 'Caja Chica Mensual', proceso: 'RINDEGASTOS', periodicidad: '1 – 5 de cada mes' },
+    { area: 'Comercial', tarea: 'Concursos Mensual AF', proceso: 'Se revisan en consolidador', periodicidad: 'Primer día del mes' },
+    { area: 'Comercial', tarea: 'Sugeridos OPAC', proceso: 'Envían desde operaciones retail el listado para revisar', periodicidad: 'Desde envío de correo desde operaciones retail' },
+    { area: 'Comercial', tarea: 'Implementación OPAC', proceso: 'Envían precios desde operaciones retail o se imprimen en ERP', periodicidad: 'De acuerdo a inicio de ciclo' },
+    { area: 'Comercial', tarea: 'Publicación Productividad', proceso: 'Revisar en DOWORK', periodicidad: 'Mínimo semanal' },
+    { area: 'Brecha', tarea: 'Revisión Canjes Oficina QF', proceso: '', periodicidad: 'De acuerdo a calendario' },
+    { area: 'Brecha', tarea: 'Envío Canjes al CD Mensual', proceso: 'PDA – LOGISTICA INVERSA', periodicidad: 'De acuerdo a calendario' },
+    { area: 'Brecha', tarea: 'Envío Mermas al CD Mensual', proceso: 'PDA – LOGISTICA INVERSA', periodicidad: 'De acuerdo a calendario' },
+    { area: 'Brecha', tarea: 'Envío Vencimientos al CD Mensual', proceso: 'PDA – LOGISTICA INVERSA', periodicidad: 'De acuerdo a calendario' },
+    { area: 'Brecha', tarea: 'Asignación de Laboratorios', proceso: 'Formato establecido por el local', periodicidad: 'De acuerdo a calendario' },
+    { area: 'Brecha', tarea: 'TAKARY Asignación Laboratorios', proceso: 'Subir cartas firmadas por colaboradores en check list de TAKARY', periodicidad: 'Una vez terminado el ciclo anterior' },
+    { area: 'Recetario Magistral', tarea: 'Preparados Magistrales Vencidos', proceso: 'Ver procedimiento adjunto', periodicidad: 'Cada viernes de la tercera semana de cada mes' },
+    { area: 'Recursos Humanos', tarea: 'Firma y Archivo Horario Mensual', proceso: 'Impreso desde GEOVICTORIA', periodicidad: '30 días de anticipación al mes' },
+    { area: 'Recursos Humanos', tarea: 'Publicación Horario Mensual', proceso: '', periodicidad: '30 días de anticipación al mes' },
+    { area: 'Recursos Humanos', tarea: 'ANEXO HH.EE. Trimestral', proceso: 'GEOVICTORIA', periodicidad: 'Trimestral' }
+  ];
+
+  const AREA_COLORS = ['blue', 'orange', 'purple', 'teal', 'pink', 'indigo', 'green', 'amber'];
+  function colorForArea(area) {
+    let hash = 0;
+    for (let i = 0; i < area.length; i++) hash = (hash * 31 + area.charCodeAt(i)) >>> 0;
+    return AREA_COLORS[hash % AREA_COLORS.length];
+  }
+
+  function defaultMesTasks() {
+    return MONTHLY_TASKS.map(t => ({ id: uid(), area: t.area, tarea: t.tarea, proceso: t.proceso, periodicidad: t.periodicidad, status: null, by: null }));
+  }
+
+  let mesTasks = [];
+  let mesSaveTimer = null;
+  const mesPicker = $('mesPicker');
+  const mesPickerLabel = $('mesPickerLabel');
+  const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  function updateMesLabel() {
+    const val = mesPicker.value;
+    if (!val) { mesPickerLabel.textContent = ''; return; }
+    const [y, m] = val.split('-').map(Number);
+    mesPickerLabel.textContent = MESES_ES[m - 1] + ' de ' + y;
+  }
+  mesPicker.value = todayStr().slice(0, 7);
+  updateMesLabel();
+  mesPicker.addEventListener('input', updateMesLabel);
+
+  async function loadMes() {
+    try {
+      const url = APPS_SCRIPT_URL + '?action=getMes&mes=' + encodeURIComponent(mesPicker.value) + '&_=' + Date.now();
+      const res = await fetch(url, { cache: 'no-store' });
+      const json = await res.json();
+      if (json.found) {
+        mesTasks = json.tasks || [];
+      } else {
+        mesTasks = defaultMesTasks();
+        scheduleSaveMes();
+      }
+    } catch (e) {
+      mesTasks = defaultMesTasks();
+    }
+    renderMes();
+  }
+
+  function scheduleSaveMes() {
+    const mesSnapshot = mesPicker.value;
+    const tasksSnapshot = mesTasks;
+    clearTimeout(mesSaveTimer);
+    mesSaveTimer = setTimeout(() => saveMes(mesSnapshot, tasksSnapshot), 500);
+  }
+
+  async function saveMes(mes, tasks) {
+    try {
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'saveMes', mes: mes, tasks: tasks })
+      });
+      const json = await res.json();
+      if (!json || json.error) throw new Error(json && json.error);
+    } catch (e) {
+      showToast('No se pudo guardar en Sheets, reintentando...');
+      clearTimeout(mesSaveTimer);
+      mesSaveTimer = setTimeout(() => saveMes(mes, tasks), 2500);
+    }
+  }
+
+  function renderMes() {
+    const wrap = $('mesGroups');
+    wrap.innerHTML = '';
+    const done = mesTasks.filter(t => t.status === 'done').length;
+    const total = mesTasks.length;
+    $('mesRingLabel').textContent = done + '/' + total;
+    const ringFg = $('mesRingFg');
+    ringFg.style.strokeDasharray = RING_CIRC;
+    ringFg.style.strokeDashoffset = RING_CIRC * (1 - (total > 0 ? done / total : 0));
+
+    if (mesTasks.length === 0) { wrap.innerHTML = '<div class="empty">Sin tareas mensuales cargadas.</div>'; return; }
+
+    const tableWrap = document.createElement('div'); tableWrap.className = 'mes-table-wrap';
+    const table = document.createElement('table'); table.className = 'mes-table';
+    table.innerHTML = '<thead><tr><th>Área</th><th>Tarea</th><th>Proceso / Sistema</th><th>Periodicidad</th><th>Estado</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+
+    mesTasks.forEach(t => {
+      const tr = document.createElement('tr');
+      if (t.status === 'done') tr.className = 'row-done';
+
+      const tdArea = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = 'area-badge area-' + colorForArea(t.area);
+      badge.textContent = t.area;
+      tdArea.appendChild(badge);
+      tr.appendChild(tdArea);
+
+      const tdTarea = document.createElement('td'); tdTarea.className = 'tarea-cell';
+      const txt = document.createElement('div'); txt.textContent = t.tarea;
+      tdTarea.appendChild(txt);
+      if (t.by) { const by = document.createElement('div'); by.className = 'ad-by'; by.style.marginTop = '3px'; by.textContent = 'Marcado por ' + t.by; tdTarea.appendChild(by); }
+      tr.appendChild(tdTarea);
+
+      const tdProceso = document.createElement('td'); tdProceso.className = 'proceso-cell';
+      tdProceso.textContent = t.proceso || '—';
+      tr.appendChild(tdProceso);
+
+      const tdPeriodo = document.createElement('td'); tdPeriodo.className = 'periodo-cell';
+      const per = document.createElement('span'); per.className = 'mes-periodo'; per.textContent = t.periodicidad;
+      tdPeriodo.appendChild(per);
+      tr.appendChild(tdPeriodo);
+
+      const tdEstado = document.createElement('td'); tdEstado.className = 'estado-cell';
+      const actions = document.createElement('div'); actions.className = 'task-actions';
+      const chkBtn = document.createElement('button');
+      chkBtn.className = 'btn-check' + (t.status === 'done' ? ' active' : '');
+      chkBtn.textContent = '✓'; chkBtn.setAttribute('data-id', t.id); chkBtn.setAttribute('data-action', 'done');
+      const xBtn = document.createElement('button');
+      xBtn.className = 'btn-x' + (t.status === 'notdone' ? ' active' : '');
+      xBtn.textContent = '✗'; xBtn.setAttribute('data-id', t.id); xBtn.setAttribute('data-action', 'notdone');
+      actions.appendChild(chkBtn); actions.appendChild(xBtn);
+      tdEstado.appendChild(actions);
+      tr.appendChild(tdEstado);
+
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    tableWrap.appendChild(table);
+    wrap.appendChild(tableWrap);
+  }
+
+  $('mesGroups').addEventListener('click', (e) => {
+    const id = e.target.getAttribute('data-id'); if (!id) return;
+    const action = e.target.getAttribute('data-action'); if (!action) return;
+    if (!requirePersona()) return;
+    const t = mesTasks.find(x => x.id === id);
+    if (t) {
+      t.status = t.status === action ? null : action;
+      if (t.status) t.by = currentPersona();
+    }
+    renderMes(); scheduleSaveMes();
+  });
+
+  mesPicker.addEventListener('change', loadMes);
+  loadMes();
+
+  loadEventos();
+  loadDay();
+
+  /* ---------- Resumen semanal ---------- */
+
+  function getWeekDates() {
+    const today = new Date();
+    const day = today.getDay();
+    const diffToMonday = (day === 0 ? -6 : 1 - day);
+    const monday = new Date(today); monday.setDate(today.getDate() + diffToMonday); monday.setHours(0,0,0,0);
+    const dates = [];
+    for (let i = 0; i < 7; i++) { const d = new Date(monday); d.setDate(monday.getDate() + i); dates.push(d); }
+    return dates;
+  }
+  function fmtISO(d) { return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+
+  async function loadWeekSummary() {
+    const dates = getWeekDates();
+    const labels = ['Lu','Ma','Mi','Ju','Vi','Sá','Do'];
+    const todayISO = todayStr();
+    $('weekRange').textContent = pad2(dates[0].getDate()) + '/' + pad2(dates[0].getMonth()+1) + ' – ' + pad2(dates[6].getDate()) + '/' + pad2(dates[6].getMonth()+1);
+
+    const results = await Promise.all(dates.map(async (d) => {
+      const iso = fmtISO(d);
+      try {
+        const url = APPS_SCRIPT_URL + '?action=getDay&fecha=' + encodeURIComponent(iso) + '&_=' + Date.now();
+        const res = await fetch(url, { cache: 'no-store' });
+        const json = await res.json();
+        if (json.found && json.tasks) {
+          const pending = json.tasks.filter(t => t.status !== 'done').length;
+          return { iso, pending, hasData: true };
+        }
+        return { iso, pending: 0, hasData: false };
+      } catch (e) {
+        return { iso, pending: 0, hasData: false };
+      }
+    }));
+
+    let totalPending = 0;
+    const wrap = $('weekDays'); wrap.innerHTML = '';
+    results.forEach((r, i) => {
+      if (r.hasData) totalPending += r.pending;
+      const chip = document.createElement('div');
+      chip.className = 'week-day' + (r.iso === todayISO ? ' today' : '') + (!r.hasData ? ' empty' : (r.pending > 0 ? ' pending' : ' complete'));
+      const d = dates[i];
+      chip.innerHTML =
+        '<div class="wd-label">' + labels[i] + '</div>' +
+        '<div class="wd-date">' + pad2(d.getDate()) + '</div>' +
+        '<div class="wd-dot">' + (r.hasData ? r.pending : '–') + '</div>';
+      chip.addEventListener('click', () => {
+        datePicker.value = r.iso;
+        loadDay();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      wrap.appendChild(chip);
+    });
+
+    $('weekTotal').innerHTML = '<span class="n">' + totalPending + '</span> tarea' + (totalPending === 1 ? '' : 's') + ' pendiente' + (totalPending === 1 ? '' : 's') + ' esta semana';
+  }
+
+  loadWeekSummary();
+
+  setupFileDrop('actArchivoZone', 'actArchivo');
+  setupFileDrop('evArchivoZone', 'evArchivo');
+  setupFileDrop('adArchivoZone', 'adArchivo');
+  setupFileDrop('mpArchivoZone', 'mpArchivo');
+})();
+</script>
+</body>
+</html>
